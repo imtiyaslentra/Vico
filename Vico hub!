@@ -4,13 +4,7 @@ local RunService = game:GetService("RunService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
 local Nurysium_Util = loadstring(game:HttpGet("https://raw.githubusercontent.com/flezzpe/Nurysium/main/nurysium_helper.lua"))()
-local function getTrainingBall()
-	for index, ball in workspace:WaitForChild("TrainingBalls"):GetChildren() do
-		if ball:IsA("BasePart") and ball:GetAttribute("realBall") then
-			return ball
-		end
-	end
-end
+
 local local_player = Players.LocalPlayer
 local camera = workspace.CurrentCamera
 local originalParryRemote
@@ -18,61 +12,46 @@ local originalResolveParryRemote
 local nurysium_dataa = nil
 local hit_Sound = nil
 local closest_Entity = nil
-local auto_parry = true
-local auto_curve = false
+local auto_parry = false
 local auto_spam = false
-local training_mode = false
-local anti_curve_spam_Enabled = false
-local visualize_Enabled = false
-local hit_sound_Enabled = false
-local hit_effect_Enabled = false
-local night_mode_Enabled = false
-local trail_Enabled = false
-local ball_trial_Enabled = false
-local self_effect_Enabled = false
-local kill_effect_Enabled = false
-local shaders_effect_Enabled = false
-local ai_Enabled = false
-local auto_win = false
-local tp_hit = false
-local spectate_Enabled = false
-local skibidi = true
-local takentimestart = false
-local Services = {game:GetService("AdService"),game:GetService("SocialService")}
-function initializate(dataaFolder_name)
-	nurysium_dataa = Instance.new("Folder", game:GetService("CoreGui"))
-	nurysium_dataa.Name = dataaFolder_name
-	hit_Sound = Instance.new("Sound", nurysium_dataa)
-	hit_Sound.SoundId = "rbxassetid://8632670510"
-	hit_Sound.Volume = 5
+local ParryCounter = 0
+local Balls = workspace:WaitForChild("Balls") -- Pastikan Balls didefinisikan
+local Alive = workspace:WaitForChild("Alive") -- Pastikan Alive didefinisikan
+
+-- Deklarasi fungsi
+local function initializate(dataaFolder_name)
+    nurysium_dataa = Instance.new("Folder", game:GetService("CoreGui"))
+    nurysium_dataa.Name = dataaFolder_name
+    hit_Sound = Instance.new("Sound", nurysium_dataa)
+    hit_Sound.SoundId = "rbxassetid://8632670510"
+    hit_Sound.Volume = 5
 end
+
 -- Fungsi untuk mendapatkan bola latihan
 local function getTrainingBall()
-	for index, ball in workspace:WaitForChild("TrainingBalls"):GetChildren() do
-		if ball:IsA("BasePart") and ball:GetAttribute("realBall") then
-			return ball
-		end
-	end
+    for _, ball in workspace:WaitForChild("TrainingBalls"):GetChildren() do
+        if ball:IsA("BasePart") and ball:GetAttribute("realBall") then
+            return ball
+        end
+    end
 end
 
 local function print(...) -- Debug print.
-    if Debug then
-        warn(...)
-    end
+    warn(...)
 end
 
 local function VerifyBall(Ball) -- Returns nil if the ball isn't a valid projectile; true if it's the right ball.
-    if typeof(Ball) == "Instance" and Ball:IsA("BasePart") and Ball:IsDescendantOf(Balls) and Ball:GetAttribute("realBall") == true then
-        return true
-    end
+    return typeof(Ball) == "Instance" and Ball:IsA("BasePart") and Ball:GetAttribute("realBall") == true
 end
 
 local function IsTarget() -- Returns true if we are the current target.
-    return (Player.Character and Player.Character:FindFirstChild("Highlight"))
+    return local_player.Character and local_player.Character:FindFirstChild("Highlight")
 end
 
 local function Parry() -- Parries.
-    Remotes:WaitForChild("ParryButtonPress"):Fire()
+    if originalParryRemote then
+        originalParryRemote:Fire()
+    end
 end
 
 local function SuperClick()
@@ -93,12 +72,12 @@ end
 -- Fungsi untuk mendapatkan pemain terdekat
 local function get_ProxyPlayer()
     local Distance = math.huge
-    local plrRP = Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")
+    local plrRP = local_player.Character and local_player.Character:FindFirstChild("HumanoidRootPart")
     local PlayerReturn = nil
     
-    for _,plr1 in pairs(Alive:GetChildren()) do
+    for _, plr1 in pairs(Alive:GetChildren()) do
         if plr1:FindFirstChild("Humanoid") and plr1.Humanoid.Health > 50 then
-            if plr1.Name ~= Player.Name and plrRP and plr1:FindFirstChild("HumanoidRootPart") then
+            if plr1.Name ~= local_player.Name and plrRP and plr1:FindFirstChild("HumanoidRootPart") then
                 local magnitude = (plr1.HumanoidRootPart.Position - plrRP.Position).Magnitude
                 if magnitude <= Distance then
                     Distance = magnitude
@@ -115,7 +94,7 @@ local function GetBall(ball)
     local Target = ""
     
     ball:GetPropertyChangedSignal("Position"):Connect(function()
-        local PlayerPP = Player and Player.Character and Player.Character.PrimaryPart
+        local PlayerPP = local_player and local_player.Character and local_player.Character.PrimaryPart
         local NearestPlayer = get_ProxyPlayer()
         
         if ball and PlayerPP and NearestPlayer and NearestPlayer.PrimaryPart then
@@ -137,7 +116,7 @@ local function GetBall(ball)
         local NearestPlayer = get_ProxyPlayer()
         
         if NearestPlayer then
-            if Target == NearestPlayer.Name or Target == Player.Name then
+            if Target == NearestPlayer.Name or Target == local_player.Name then
                 ParryCounter = ParryCounter + 1
             else
                 ParryCounter = 0
@@ -146,7 +125,7 @@ local function GetBall(ball)
     end)
 end
 
-for _,ball in pairs(Balls:GetChildren()) do
+for _, ball in pairs(Balls:GetChildren()) do
     if ball and not ball:GetAttribute("realBall") then
         return
     end
@@ -173,6 +152,7 @@ task.spawn(function()
         end
     end
 end)
+
 -- Memuat library Fluent dan addons
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
 local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
@@ -212,9 +192,9 @@ do
         Callback = function(state)
             getgenv().auto_parry = state
             if state then
-                StartAutoParry() -- Pastikan fungsi ini didefinisikan
+                StartAutoParry()
             else
-                StopAutoParry() -- Pastikan fungsi ini didefinisikan
+                StopAutoParry()
             end
         end
     })
@@ -235,9 +215,9 @@ do
         Callback = function(state)
             getgenv().auto_spam = state
             if state then
-                StartAutoSpam() -- Pastikan fungsi ini didefinisikan
+                StartAutoSpam()
             else
-                StopAutoSpam() -- Pastikan fungsi ini didefinisikan
+                StopAutoSpam()
             end
         end
     })
@@ -245,51 +225,73 @@ end
 
 -- Mendefinisikan fungsi untuk Auto Parry
 function StartAutoParry()
-    -- Kode untuk memulai Auto Parry
+    getgenv().auto_parry = true
+    task.spawn(function()
+        while getgenv().auto_parry do
+            task.wait(0.1)
+            if IsTarget() then
+                Parry()
+            end
+        end
+    end)
 end
 
 function StopAutoParry()
-    -- Kode untuk menghentikan Auto Parry
+    getgenv().auto_parry = false
 end
 
 -- Mendefinisikan fungsi untuk Auto Spam
 function StartAutoSpam()
-    -- Kode untuk memulai Auto Spam
+    getgenv().auto_spam = true
+    task.spawn(function()
+        while getgenv().auto_spam do
+            task.wait(0.1)
+            SuperClick()
+        end
+    end)
 end
 
 function StopAutoSpam()
-    -- Kode untuk menghentikan Auto Spam
+    getgenv().auto_spam = false
 end
 
--- Konfigurasi ScreenGui
-local ScreenGui = Instance.new("ScreenGui")
-local ImageButton = Instance.new("ImageButton")
-local UICorner = Instance.new("UICorner")
-
--- Set parent ScreenGui
-ScreenGui.Parent = game.CoreGui
-ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-
--- Konfigurasi ImageButton
-ImageButton.Parent = ScreenGui
-ImageButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-ImageButton.BorderSizePixel = 0
-ImageButton.Position = UDim2.new(0.120833337, 0, 0.0952890813, 0)
-ImageButton.Size = UDim2.new(0, 50, 0, 50)
-ImageButton.Image = "rbxassetid://83582647628443" -- Set gambar menggunakan ID decal
-ImageButton.Draggable = true
-
--- Tambahkan UICorner untuk sudut melengkung
-UICorner.Parent = ImageButton
-
--- Fungsi untuk menangani event klik
-ImageButton.MouseButton1Click:Connect(function()
-    game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode.End, false, game)
+-- Fungsi untuk mendapatkan Training Ball secara otomatis
+task.spawn(function()
+    while true do
+        task.wait(10) -- Cek setiap 10 detik
+        local ball = getTrainingBall()
+        if ball then
+            print("Mendapatkan Training Ball:", ball.Name
+            print("Mendapatkan Training Ball:", ball.Name)
+        else
+            print("Tidak ada Training Ball yang tersedia.")
+        end
+    end
 end)
 
--- Pastikan fungsi optimizePerformance() sudah didefinisikan sebelum dipanggil
-if optimizePerformance then
-    optimizePerformance()
-else
-    warn("Function optimizePerformance is not defined.")
-end
+-- Inisialisasi dengan nama folder yang diinginkan
+initializate("NurysiumData")
+
+-- Menghubungkan dengan event untuk setiap bola yang ditambahkan ke workspace
+Balls.ChildAdded:Connect(function(ball)
+    if VerifyBall(ball) then
+        GetBall(ball)
+        print("Bola latihan baru ditambahkan:", ball.Name)
+    end
+end)
+
+-- Menjalankan fungsi utama
+task.spawn(function()
+    while true do
+        task.wait(1) -- Cek setiap detik
+        local NearestPlayer = get_ProxyPlayer()
+        if NearestPlayer then
+            print("Pemain terdekat:", NearestPlayer.Name)
+        else
+            print("Tidak ada pemain terdekat.")
+        end
+    end
+end)
+
+-- Menjalankan GUI
+Window:Show()

@@ -4,16 +4,48 @@ local RunService = game:GetService("RunService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
 local Nurysium_Util = loadstring(game:HttpGet("https://raw.githubusercontent.com/flezzpe/Nurysium/main/nurysium_helper.lua"))()
-local Player = Players.LocalPlayer
-local Balls = workspace:WaitForChild("TrainingBalls") -- Pastikan Anda memiliki folder TrainingBalls di workspace
-local Remotes = ReplicatedStorage:WaitForChild("Remotes") -- Pastikan Anda memiliki Remotes di ReplicatedStorage
-local Alive = workspace:WaitForChild("Alive", 9e9)
-local ParryAttempt = Remotes:WaitForChild("ParryAttempt", 9e9)
-local auto_parry = false -- Diatur dari GUI
-local auto_spam = false -- Diatur dari GUI
-local ParryCounter = 0
-local DetectSpamDistance = 0
-
+local function getTrainingBall()
+	for index, ball in workspace:WaitForChild("TrainingBalls"):GetChildren() do
+		if ball:IsA("BasePart") and ball:GetAttribute("realBall") then
+			return ball
+		end
+	end
+end
+local local_player = Players.LocalPlayer
+local camera = workspace.CurrentCamera
+local originalParryRemote
+local originalResolveParryRemote 
+local nurysium_dataa = nil
+local hit_Sound = nil
+local closest_Entity = nil
+local auto_parry = true
+local auto_curve = false
+local auto_spam = false
+local training_mode = false
+local anti_curve_spam_Enabled = false
+local visualize_Enabled = false
+local hit_sound_Enabled = false
+local hit_effect_Enabled = false
+local night_mode_Enabled = false
+local trail_Enabled = false
+local ball_trial_Enabled = false
+local self_effect_Enabled = false
+local kill_effect_Enabled = false
+local shaders_effect_Enabled = false
+local ai_Enabled = false
+local auto_win = false
+local tp_hit = false
+local spectate_Enabled = false
+local skibidi = true
+local takentimestart = false
+local Services = {game:GetService("AdService"),game:GetService("SocialService")}
+function initializate(dataaFolder_name)
+	nurysium_dataa = Instance.new("Folder", game:GetService("CoreGui"))
+	nurysium_dataa.Name = dataaFolder_name
+	hit_Sound = Instance.new("Sound", nurysium_dataa)
+	hit_Sound.SoundId = "rbxassetid://8632670510"
+	hit_Sound.Volume = 5
+end
 -- Fungsi untuk mendapatkan bola latihan
 local function getTrainingBall()
 	for index, ball in workspace:WaitForChild("TrainingBalls"):GetChildren() do

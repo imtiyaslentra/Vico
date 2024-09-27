@@ -143,16 +143,18 @@ task.spawn(function()
 end)
 
 -- Membuat GUI menggunakan Fluent UI
+-- Pastikan kode ini setelah semua definisi variabel dan fungsi
+local ScreenGui = Instance.new("ScreenGui")
 local Window = Fluent:CreateWindow({
-    Title = "March Hub",
+    Title = "Vico Hub",
     SubTitle = "https://discord.gg/EJB93G3jGe",
     TabWidth = 160,
     Size = UDim2.fromOffset(500, 320),
     Acrylic = true,
     Theme = "Light",
-    MinimizeKey = Enum.KeyCode.End
+    MinimizeKey = Enum.KeyCode.End,
+    Parent = ScreenGui -- Pastikan Parent diatur
 })
-
 local Tabs = {
     Main = Window:AddTab({ Title = "Main", Icon = "home" }),
 }
@@ -193,6 +195,14 @@ do
             end
         end
     })
+local TestGui = Instance.new("ScreenGui")
+local TestFrame = Instance.new("Frame")
+
+TestGui.Parent = game.CoreGui
+TestFrame.Parent = TestGui
+TestFrame.Size = UDim2.new(0.5, 0, 0.5, 0) -- Setengah layar
+TestFrame.Position = UDim2.new(0.25, 0, 0.25, 0) -- Tengah layar
+TestFrame.BackgroundColor3 = Color3.new(1, 0, 0) -- Warna merah
 
     local ScreenGui = Instance.new("ScreenGui")
     local ImageButton = Instance.new("ImageButton")

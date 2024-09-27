@@ -177,7 +177,15 @@ end)
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
 local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
 local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
+
+-- Deklarasi variabel global untuk fitur toggle
+getgenv().auto_parry = false
+getgenv().auto_spam = false
+getgenv().visualize_Enabled = false
+
 ----------------------------------------------------------------------------------------------------------------------------------------------
+
+-- Membuat window
 local Window = Fluent:CreateWindow({
     Title = "Vico Hub",
     SubTitle = "https://discord.gg/EJB93G3jGe",
@@ -202,7 +210,12 @@ do
         Description = "• Main Parry",
         Default = false,
         Callback = function(state)
-            auto_parry = state
+            getgenv().auto_parry = state
+            if state then
+                StartAutoParry() -- Pastikan fungsi ini didefinisikan
+            else
+                StopAutoParry() -- Pastikan fungsi ini didefinisikan
+            end
         end
     })
 
@@ -211,19 +224,43 @@ do
         Description = "• View Part",
         Default = false,
         Callback = function(state)
-            visualize_Enabled = state
+            getgenv().visualize_Enabled = state
         end
     })
 
     local ToggleAutoSpam = MainTab:AddToggle("Auto Spam", {
-    Title = "Auto Spam",
-    Description = "• Main Spam",
-    Default = false,
-    Callback = function(state)
-        auto_spam = state
-        getgenv().AutoDetectSpam = state  -- Menyambungkan toggle dengan pengaturan spam
-    end
-   })
+        Title = "Auto Spam",
+        Description = "• Main Spam",
+        Default = false,
+        Callback = function(state)
+            getgenv().auto_spam = state
+            if state then
+                StartAutoSpam() -- Pastikan fungsi ini didefinisikan
+            else
+                StopAutoSpam() -- Pastikan fungsi ini didefinisikan
+            end
+        end
+    })
+end
+
+-- Mendefinisikan fungsi untuk Auto Parry
+function StartAutoParry()
+    -- Kode untuk memulai Auto Parry
+end
+
+function StopAutoParry()
+    -- Kode untuk menghentikan Auto Parry
+end
+
+-- Mendefinisikan fungsi untuk Auto Spam
+function StartAutoSpam()
+    -- Kode untuk memulai Auto Spam
+end
+
+function StopAutoSpam()
+    -- Kode untuk menghentikan Auto Spam
+end
+
 -- Konfigurasi ScreenGui
 local ScreenGui = Instance.new("ScreenGui")
 local ImageButton = Instance.new("ImageButton")
@@ -251,4 +288,8 @@ ImageButton.MouseButton1Click:Connect(function()
 end)
 
 -- Pastikan fungsi optimizePerformance() sudah didefinisikan sebelum dipanggil
-optimizePerformance()
+if optimizePerformance then
+    optimizePerformance()
+else
+    warn("Function optimizePerformance is not defined.")
+end

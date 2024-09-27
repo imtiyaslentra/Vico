@@ -143,11 +143,14 @@ task.spawn(function()
 end)
 
 -- Membuat GUI menggunakan Fluent UI
--- Pastikan kode ini setelah semua definisi variabel dan fungsi
+-- Inisialisasi library
+local Fluent = require(game.ReplicatedStorage:WaitForChild("Fluent")) -- Atur path yang sesuai
+
+-- Buat GUI
 local ScreenGui = Instance.new("ScreenGui")
 local Window = Fluent:CreateWindow({
     Title = "Vico Hub",
-    SubTitle = "https://discord.gg/EJB93G3jGe",
+    SubTitle = "Vico Hub Semakin Di Depan GASPOLL",
     TabWidth = 160,
     Size = UDim2.fromOffset(500, 320),
     Acrylic = true,
@@ -155,6 +158,7 @@ local Window = Fluent:CreateWindow({
     MinimizeKey = Enum.KeyCode.End,
     Parent = ScreenGui -- Pastikan Parent diatur
 })
+
 local Tabs = {
     Main = Window:AddTab({ Title = "Main", Icon = "home" }),
 }

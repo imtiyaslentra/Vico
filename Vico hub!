@@ -1,10 +1,8 @@
 -- Membuat ScreenGui dan Frame untuk OrionLibrary
-
 local player = game.Players.LocalPlayer
 local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "Vico Hub"
+screenGui.Name = "OrionLibrary"
 screenGui.Parent = player:WaitForChild("PlayerGui")
-
 local frame = Instance.new("Frame")
 frame.Size = UDim2.new(0.5, 0, 0.5, 0)
 frame.Position = UDim2.new(0.25, 0, 0.25, 0)
@@ -13,7 +11,7 @@ frame.BorderSizePixel = 0
 frame.Parent = screenGui
 
 -- Menambahkan label judul
-local titleLabel = Instance.new("Vico Pro")
+local titleLabel = Instance.new("TextLabel")
 titleLabel.Size = UDim2.new(1, 0, 0.1, 0)
 titleLabel.Position = UDim2.new(0, 0, 0, 0)
 titleLabel.Text = "OrionLibrary"
@@ -22,7 +20,7 @@ titleLabel.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 titleLabel.Parent = frame
 
 -- Toggle untuk AutoSpam
-local autoSpamToggle = Instance.new("|Auto Spam|")
+local autoSpamToggle = Instance.new("TextButton")
 autoSpamToggle.Size = UDim2.new(0.8, 0, 0.1, 0)
 autoSpamToggle.Position = UDim2.new(0.1, 0, 0.2, 0)
 autoSpamToggle.Text = "AutoSpam: OFF"
@@ -31,7 +29,7 @@ autoSpamToggle.BackgroundColor3 = Color3.fromRGB(70, 130, 180)
 autoSpamToggle.Parent = frame
 
 -- Toggle untuk AutoParry
-local autoParryToggle = Instance.new("|Auto Parry|")
+local autoParryToggle = Instance.new("TextButton")
 autoParryToggle.Size = UDim2.new(0.8, 0, 0.1, 0)
 autoParryToggle.Position = UDim2.new(0.1, 0, 0.35, 0)
 autoParryToggle.Text = "AutoParry: OFF"
@@ -40,7 +38,7 @@ autoParryToggle.BackgroundColor3 = Color3.fromRGB(70, 130, 180)
 autoParryToggle.Parent = frame
 
 -- Fungsi untuk toggle AutoSpam
-getgenv().AutoDetectSpam = true
+getgenv().AutoDetectSpam = false
 
 local function toggleAutoSpam()
     getgenv().AutoDetectSpam = not getgenv().AutoDetectSpam
@@ -55,7 +53,7 @@ autoSpamToggle.MouseButton1Click:Connect(toggleAutoSpam)
 
 -- Fungsi untuk toggle AutoParry
 getgenv().Paws = {
-    ["AutoParry"] = true,
+    ["AutoParry"] = false,
     ["PingBased"] = true,
     ["PingBasedOffset"] = 0,
     ["DistanceToParry"] = 0.5,

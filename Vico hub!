@@ -141,22 +141,19 @@ task.spawn(function()
         end
     end
 end)
-
--- Membuat GUI menggunakan Fluent UI
--- Inisialisasi library
-local Fluent = require(game.ReplicatedStorage:WaitForChild("Fluent")) -- Atur path yang sesuai
-
--- Buat GUI
-local ScreenGui = Instance.new("ScreenGui")
+-- Memuat library Fluent dan addons
+local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
+local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
+----------------------------------------------------------------------------------------------------------------------------------------------
 local Window = Fluent:CreateWindow({
     Title = "Vico Hub",
-    SubTitle = "Vico Hub Semakin Di Depan GASPOLL",
+    SubTitle = "https://discord.gg/EJB93G3jGe",
     TabWidth = 160,
     Size = UDim2.fromOffset(500, 320),
     Acrylic = true,
     Theme = "Light",
-    MinimizeKey = Enum.KeyCode.End,
-    Parent = ScreenGui -- Pastikan Parent diatur
+    MinimizeKey = Enum.KeyCode.End
 })
 
 local Tabs = {
@@ -165,19 +162,19 @@ local Tabs = {
 
 local Options = Fluent.Options
 
+-- Menambahkan toggle untuk fitur Auto Parry dan Auto Spam
 do
     local MainTab = Tabs.Main
-    
-    local Toggle = MainTab:AddToggle("Auto Parry", {
+    local ToggleAutoParry = MainTab:AddToggle("Auto Parry", {
         Title = "Auto Parry",
         Description = "• Main Parry",
         Default = false,
         Callback = function(state)
-            auto_parry = state -- Mengatur nilai auto_parry dari toggle
+            auto_parry = state
         end
     })
 
-    local Toggle1 = MainTab:AddToggle("Visualizer", {
+    local ToggleVisualizer = MainTab:AddToggle("Visualizer", {
         Title = "Visualizer",
         Description = "• View Part",
         Default = false,
@@ -186,57 +183,43 @@ do
         end
     })
 
-    local Toggle2 = MainTab:AddToggle("Auto Spam", {
-        Title = "Auto Spam",
-        Description = "• Main Spam",
-        Default = false,
-        Callback = function(state)
-            auto_spam = state -- Mengatur nilai auto_spam dari toggle
-            if state then
-                getgenv().AutoDetectSpam = true -- Mengaktifkan deteksi spam saat toggle aktif
-            else
-                getgenv().AutoDetectSpam = false -- Menonaktifkan deteksi spam saat toggle tidak aktif
-            end
-        end
+    local ToggleAutoSpam = MainTab:AddToggle("Auto Spam", {
+    Title = "Auto Spam",
+    Description = "• Main Spam",
+    Default = false,
+    Callback = function(state)
+        auto_spam = state
+        getgenv().AutoDetectSpam = state  -- Menyambungkan toggle dengan pengaturan spam
+    end
+})
     })
-local TestGui = Instance.new("ScreenGui")
-local TestFrame = Instance.new("Frame")
-
-TestGui.Parent = game.CoreGui
-TestFrame.Parent = TestGui
-TestFrame.Size = UDim2.new(0.5, 0, 0.5, 0) -- Setengah layar
-TestFrame.Position = UDim2.new(0.25, 0, 0.25, 0) -- Tengah layar
-TestFrame.BackgroundColor3 = Color3.new(1, 0, 0) -- Warna merah
-
-    local ScreenGui = Instance.new("ScreenGui")
-    local ImageButton = Instance.new("ImageButton")
-    local UICorner = Instance.new("UICorner")
-
-    -- Konfigurasi ScreenGui
-    ScreenGui.Parent = game.CoreGui
-    ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-
-    -- Konfigurasi ImageButton
-    ImageButton.Parent = ScreenGui
-    ImageButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    ImageButton.BorderSizePixel = 0
-    ImageButton.Position = UDim2.new(0.120833337, 0, 0.0952890813, 0)
-    ImageButton.Size = UDim2.new(0, 50, 0, 50)
-    ImageButton.Image = "rbxassetid://83582647628443" -- Setel gambar menggunakan ID decal
-    ImageButton.Draggable = true
-
-    -- Tambahkan UICorner untuk sudut melengkung
-    UICorner.Parent = ImageButton
-
-    -- Fungsi untuk menangani acara klik
-    ImageButton.MouseButton1Click:Connect(function()
-        game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode.End, false, game)
-    end)
 end
 
--- Fungsi untuk mengoptimalkan kinerja
-function optimizePerformance()
-    -- Implementasikan logika pengoptimalan kinerja di sini
-end
+-- Konfigurasi ScreenGui
+local ScreenGui = Instance.new("ScreenGui")
+local ImageButton = Instance.new("ImageButton")
+local UICorner = Instance.new("UICorner")
 
+-- Set parent ScreenGui
+ScreenGui.Parent = game.CoreGui
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+-- Konfigurasi ImageButton
+ImageButton.Parent = ScreenGui
+ImageButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+ImageButton.BorderSizePixel = 0
+ImageButton.Position = UDim2.new(0.120833337, 0, 0.0952890813, 0)
+ImageButton.Size = UDim2.new(0, 50, 0, 50)
+ImageButton.Image = "rbxassetid://83582647628443" -- Set gambar menggunakan ID decal
+ImageButton.Draggable = true
+
+-- Tambahkan UICorner untuk sudut melengkung
+UICorner.Parent = ImageButton
+
+-- Fungsi untuk menangani event klik
+ImageButton.MouseButton1Click:Connect(function()
+    game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode.End, false, game)
+end)
+
+-- Pastikan fungsi optimizePerformance() sudah didefinisikan sebelum dipanggil
 optimizePerformance()

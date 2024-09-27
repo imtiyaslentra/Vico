@@ -223,10 +223,7 @@ do
         auto_spam = state
         getgenv().AutoDetectSpam = state  -- Menyambungkan toggle dengan pengaturan spam
     end
-})
-    })
-end
-
+   })
 -- Konfigurasi ScreenGui
 local ScreenGui = Instance.new("ScreenGui")
 local ImageButton = Instance.new("ImageButton")

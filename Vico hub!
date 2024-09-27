@@ -1,0 +1,228 @@
+local Stats = game:GetService("Stats")
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TweenService = game:GetService("TweenService")
+local Nurysium_Util = loadstring(game:HttpGet("https://raw.githubusercontent.com/flezzpe/Nurysium/main/nurysium_helper.lua"))()
+local Player = Players.LocalPlayer
+local Balls = workspace:WaitForChild("TrainingBalls") -- Pastikan Anda memiliki folder TrainingBalls di workspace
+local Remotes = ReplicatedStorage:WaitForChild("Remotes") -- Pastikan Anda memiliki Remotes di ReplicatedStorage
+local Alive = workspace:WaitForChild("Alive", 9e9)
+local ParryAttempt = Remotes:WaitForChild("ParryAttempt", 9e9)
+local auto_parry = false -- Diatur dari GUI
+local auto_spam = false -- Diatur dari GUI
+local ParryCounter = 0
+local DetectSpamDistance = 0
+
+-- Fungsi untuk mendapatkan bola latihan
+local function getTrainingBall()
+	for index, ball in workspace:WaitForChild("TrainingBalls"):GetChildren() do
+		if ball:IsA("BasePart") and ball:GetAttribute("realBall") then
+			return ball
+		end
+	end
+end
+
+local function print(...) -- Debug print.
+    if Debug then
+        warn(...)
+    end
+end
+
+local function VerifyBall(Ball) -- Returns nil if the ball isn't a valid projectile; true if it's the right ball.
+    if typeof(Ball) == "Instance" and Ball:IsA("BasePart") and Ball:IsDescendantOf(Balls) and Ball:GetAttribute("realBall") == true then
+        return true
+    end
+end
+
+local function IsTarget() -- Returns true if we are the current target.
+    return (Player.Character and Player.Character:FindFirstChild("Highlight"))
+end
+
+local function Parry() -- Parries.
+    Remotes:WaitForChild("ParryButtonPress"):Fire()
+end
+
+local function SuperClick()
+    task.spawn(function()
+        if IsAlive() and #Alive:GetChildren() > 1 then
+            local args1 = 0.5
+            local args2 = CFrame.new()
+            local args3 = {["enzo"] = Vector3.new()}
+            local args4 = {500, 500}
+            
+            if args1 and args2 and args3 and args4 then
+                ParryAttempt:FireServer(args1, args2, args3, args4)
+            end
+        end
+    end)
+end
+
+-- Fungsi untuk mendapatkan pemain terdekat
+local function get_ProxyPlayer()
+    local Distance = math.huge
+    local plrRP = Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")
+    local PlayerReturn = nil
+    
+    for _,plr1 in pairs(Alive:GetChildren()) do
+        if plr1:FindFirstChild("Humanoid") and plr1.Humanoid.Health > 50 then
+            if plr1.Name ~= Player.Name and plrRP and plr1:FindFirstChild("HumanoidRootPart") then
+                local magnitude = (plr1.HumanoidRootPart.Position - plrRP.Position).Magnitude
+                if magnitude <= Distance then
+                    Distance = magnitude
+                    PlayerReturn = plr1
+                end
+            end
+        end
+    end
+    return PlayerReturn
+end
+
+-- Fungsi untuk menangani bola yang ditambahkan
+local function GetBall(ball)
+    local Target = ""
+    
+    ball:GetPropertyChangedSignal("Position"):Connect(function()
+        local PlayerPP = Player and Player.Character and Player.Character.PrimaryPart
+        local NearestPlayer = get_ProxyPlayer()
+        
+        if ball and PlayerPP and NearestPlayer and NearestPlayer.PrimaryPart then
+            local PlayerDistance = (PlayerPP.Position - NearestPlayer.PrimaryPart.Position).Magnitude
+            local BallDistance = (PlayerPP.Position - ball.Position).Magnitude
+            
+            DetectSpamDistance = 25 + math.clamp(ParryCounter / 3, 0, 25)
+            
+            if ParryCounter > 2 and PlayerDistance < DetectSpamDistance and BallDistance < 55 then
+                getgenv().SpamClickA = true
+            else
+                getgenv().SpamClickA = false
+            end
+        end
+    end)
+    
+    ball:GetAttributeChangedSignal("target"):Connect(function()
+        Target = ball:GetAttribute("target")
+        local NearestPlayer = get_ProxyPlayer()
+        
+        if NearestPlayer then
+            if Target == NearestPlayer.Name or Target == Player.Name then
+                ParryCounter = ParryCounter + 1
+            else
+                ParryCounter = 0
+            end
+        end
+    end)
+end
+
+for _,ball in pairs(Balls:GetChildren()) do
+    if ball and not ball:GetAttribute("realBall") then
+        return
+    end
+    
+    GetBall(ball)
+end
+
+Balls.ChildAdded:Connect(function(ball)
+    if not getgenv().AutoDetectSpam then
+        return
+    elseif ball and not ball:GetAttribute("realBall") then
+        return
+    end
+    
+    getgenv().SpamClickA = false
+    ParryCounter = 0
+    GetBall(ball)
+end)
+
+task.spawn(function()
+    while task.wait() do
+        if getgenv().SpamClickA and auto_spam then
+            SuperClick()
+        end
+    end
+end)
+
+-- Membuat GUI menggunakan Fluent UI
+local Window = Fluent:CreateWindow({
+    Title = "March Hub",
+    SubTitle = "https://discord.gg/EJB93G3jGe",
+    TabWidth = 160,
+    Size = UDim2.fromOffset(500, 320),
+    Acrylic = true,
+    Theme = "Light",
+    MinimizeKey = Enum.KeyCode.End
+})
+
+local Tabs = {
+    Main = Window:AddTab({ Title = "Main", Icon = "home" }),
+}
+
+local Options = Fluent.Options
+
+do
+    local MainTab = Tabs.Main
+    
+    local Toggle = MainTab:AddToggle("Auto Parry", {
+        Title = "Auto Parry",
+        Description = "• Main Parry",
+        Default = false,
+        Callback = function(state)
+            auto_parry = state -- Mengatur nilai auto_parry dari toggle
+        end
+    })
+
+    local Toggle1 = MainTab:AddToggle("Visualizer", {
+        Title = "Visualizer",
+        Description = "• View Part",
+        Default = false,
+        Callback = function(state)
+            visualize_Enabled = state
+        end
+    })
+
+    local Toggle2 = MainTab:AddToggle("Auto Spam", {
+        Title = "Auto Spam",
+        Description = "• Main Spam",
+        Default = false,
+        Callback = function(state)
+            auto_spam = state -- Mengatur nilai auto_spam dari toggle
+            if state then
+                getgenv().AutoDetectSpam = true -- Mengaktifkan deteksi spam saat toggle aktif
+            else
+                getgenv().AutoDetectSpam = false -- Menonaktifkan deteksi spam saat toggle tidak aktif
+            end
+        end
+    })
+
+    local ScreenGui = Instance.new("ScreenGui")
+    local ImageButton = Instance.new("ImageButton")
+    local UICorner = Instance.new("UICorner")
+
+    -- Konfigurasi ScreenGui
+    ScreenGui.Parent = game.CoreGui
+    ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+    -- Konfigurasi ImageButton
+    ImageButton.Parent = ScreenGui
+    ImageButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    ImageButton.BorderSizePixel = 0
+    ImageButton.Position = UDim2.new(0.120833337, 0, 0.0952890813, 0)
+    ImageButton.Size = UDim2.new(0, 50, 0, 50)
+    ImageButton.Image = "rbxassetid://83582647628443" -- Setel gambar menggunakan ID decal
+    ImageButton.Draggable = true
+
+    -- Tambahkan UICorner untuk sudut melengkung
+    UICorner.Parent = ImageButton
+
+    -- Fungsi untuk menangani acara klik
+    ImageButton.MouseButton1Click:Connect(function()
+        game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode.End, false, game)
+    end)
+end
+
+-- Fungsi untuk mengoptimalkan kinerja
+function optimizePerformance()
+    -- Implementasikan logika pengoptimalan kinerja di sini
+end
+
+optimizePerformance()

@@ -1,4 +1,4 @@
-local AstroXUI = loadstring(game:HttpGet("https://gist.githubusercontent.com/SoyAdriYT/92148422df4426ab97aa8e279ed76f50/raw/150cbe1ae883287ca2cec89922dfcedeeebfea54/gistfile1.txt"))()
+local AstroXUI = loadstring(game:HttpGet("https://github.com/SoyAdriYT/AstroX/raw/main/LibraryUI/AstroXUI.lua"))()
 
 local Stats = game:GetService('Stats')
 
@@ -556,7 +556,7 @@ spawn(function()
                 local character = player.Character
 
                 if character and character.Parent and character.Parent.Name ~= "Dead" then
-                local targetPosition
+                    local targetPosition
                     for _, v in pairs(game:GetService("Workspace").Balls:GetChildren()) do
                         if v:IsA("Part") then
                             local part, speed = getSpeed(v)
@@ -629,7 +629,7 @@ spawn(function()
     end
 end)
 
-local Title1 = "Vico Hub"
+local Title1 = "Vico H"
 local Key2 = "https://discord.gg/yZTduXkhMn"
 
 local MarketplaceService = game:GetService("MarketplaceService")
@@ -641,14 +641,14 @@ local gameName = success and gameInfo.Name or "Unknown Game"
 
 local Window = AstroXUI:Window(Title1, gameName)
 
-local Tab = Window:Tab("|Home|")
-local Tab2 = Window:Tab("|Player|")
-local Tab3 = Window:Tab("|Main|")
-local Tab4 = Window:Tab("|Combat|")
-local Tab5 = Window:Tab("|Shop|")
-local Tab7 = Window:Tab("|Settings|")
+local Tab = Window:Tab("•|Home|•")
+local Tab2 = Window:Tab("•|Player|•")
+local Tab3 = Window:Tab("•|Main|•")
+local Tab4 = Window:Tab("•|Combat|•")
+local Tab5 = Window:Tab("•|Shop|•")
+local Tab7 = Window:Tab("•|Settings|•")
 
-Tab:Label("Hey Join Our Community Discord!")
+Tab:Label("Join our discord.")
 Tab:Label("Creators G - MX2 and Alexisback.")
 Tab:line()
 Tab:Button("Copy link discord", function()
@@ -750,7 +750,14 @@ Tab4:Toggle("Hit Effect AI", false, function(toggled)
     getgenv().hit_effect_Enabled = toggled
 end)
 
-Tab4:Slider("Distance Parry AI", 1, 10, 3, function(value)
+Tab4:line()
+
+Tab4:Toggle("Trial AI", false, function(toggled)
+    getgenv().trail_Enabled = toggled
+end)
+
+Tab4:Toggle("Self Effect AI", false, function(toggled)
+    getgenv().self_effect_Enabled = toggled
 end)
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -903,14 +910,14 @@ CreditsBG.BackgroundTransparency = 1
 CreditsBG.Position = UDim2.new(1, -159, 1, -34)
 CreditsBG.Size = UDim2.new(0, 150, 0, 30)
 
-CreditsText.Name = "CreditsText"
+CreditsText.Name = "Credit Develop Script"
 CreditsText.Parent = CreditsBG
 CreditsText.BackgroundColor3 = Color3.new(1, 1, 1)
 CreditsText.BackgroundTransparency = 1
 CreditsText.Size = UDim2.new(1, 0, 1, 0)
 CreditsText.Font = Enum.Font.SourceSans
 CreditsText.FontSize = Enum.FontSize.Size18
-CreditsText.Text = "Created by G - MX2 and Alexisback."
+CreditsText.Text = "Created by Rudert As Modeling And Recreation"
 CreditsText.TextColor3 = Color3.new(1, 1, 1)
 CreditsText.TextSize = 14
 CreditsText.TextStrokeColor3 = Color3.new(0.196078, 0.196078, 0.196078)
@@ -973,18 +980,9 @@ Toggle.MouseButton1Click:Connect(function()
     end
 end)
 
-Tab4:Toggle("Manual Spam AI", false, function(Value)
+
+Tab4:Toggle("Manual Spam", false, function(Value)
     Spam.Enabled = Value
-end)
-
-Tab4:line()
-
-Tab4:Toggle("Trial AI", false, function(toggled)
-    getgenv().trail_Enabled = toggled
-end)
-
-Tab4:Toggle("Self Effect AI", false, function(toggled)
-    getgenv().self_effect_Enabled = toggled
 end)
 
 getgenv().ViewParryArea = false
@@ -1098,7 +1096,9 @@ local function ViewParryArea()
     end)
 end
 
-Tab4:Toggle("Visualizer Ball AI", false, function(toggled)
+Tab4:line()
+
+Tab4:Toggle("|•Visualizer Ball System AI", false, function(toggled)
     getgenv().ViewParryArea = toggled
     if toggled then
         ViewParryArea()
@@ -1109,6 +1109,13 @@ Tab4:Toggle("Visualizer Ball AI", false, function(toggled)
             existingPart:Destroy()
         end
     end
+end)
+
+Tab4:Slider("|•Distance Parry Check By AI", 0, 1000, 1, function(value)
+end)
+
+Tab4:Toggle("|•Follow Ball Check By AI", false, function(state)
+    getgenv().FB = state
 end)
 
 Tab4:Dropdown("Select Sound", {"DC-15X", "Neverlose", "Minecraft", "MinecraftHit2", "Teamfortress Bonk", "Teamfortress Bell"}, function(selected)
@@ -1128,49 +1135,45 @@ Tab4:Dropdown("Select Sound", {"DC-15X", "Neverlose", "Minecraft", "MinecraftHit
     getgenv().hit_sound_Enabled = true
 end)
 
-Tab4:Toggle("Follow Ball AI", false, function(state)
-    getgenv().FB = state
-end)
-
 Tab4:line()
 
-Tab4:Toggle("Auto Spam AI", false, function(state)
+Tab4:Toggle("•Auto Spam System AI", false, function(state)
 end)
 
-Tab4:Toggle("Anti Curve AI", false, function(state)
+Tab4:Toggle("•Anti Curve System AI", false, function(state)
 end)
 
-Tab4:Toggle("Auto Curve AI", false, function(toggled)
+Tab4:Toggle("•Auto Curve System AI", false, function(toggled)
     getgenv().auto_curve_Enabled = toggled
 end)
 
 Tab4:line()
 
-Tab4:Dropdown("Parry Modes AI", {"Basic AI", "Basic High AI", "Medium AI", "Medium High AI", "Pro AI", "Pro High AI", "Extreme AI", "Impossible AI"}, function(selected)
+Tab4:Dropdown("•Parry Model AI", {"Basic AI", "Basic High AI", "Medium AI", "Medium High AI", "Pro AI", "Pro High AI", "Extreme AI", "Impossible AI"}, function(selected)
 end)
 
-Tab4:Dropdown("Auto Spam Modes AI", {"Not Fast AI", "Fast AI", "Ultra Fast AI", "Mega Super Fast AI"}, function(selected)
+Tab4:Dropdown("•Auto Spam Model AI", {"Not Fast AI", "Fast AI", "Ultra Fast AI", "Mega Super Fast AI"}, function(selected)
 end)
 
-Tab5:Toggle("Auto Buy Sword Box", false, function(state)
+Tab5:Toggle("•Auto Buy Sword Box", false, function(state)
     getgenv().ASC = state
 end)
 
-Tab5:Toggle("Auto Buy Explosion Box", false, function(state)
+Tab5:Toggle("•Auto Buy Explosion Box", false, function(state)
     getgenv().AEC = state
 end)
 
 Tab5:line()
 
-Tab5:Button("Buy Sword Box", function()
+Tab5:Button("•Buy Sword Box", function()
     game:GetService("ReplicatedStorage").Remote.RemoteFunction:InvokeServer("PromptPurchaseCrate", workspace.Spawn.Crates.NormalSwordCrate)
 end)
 
-Tab5:Button("Buy Explosion Box", function()
+Tab5:Button("•Buy Explosion Box", function()
     game:GetService("ReplicatedStorage").Remote.RemoteFunction:InvokeServer("PromptPurchaseCrate", workspace.Spawn.Crates.NormalExplosionCrate)
 end)
 
-print("Blade Ball Anti Cheat Bypass Activated.")
+print("Blade Ball Anti Cheat Bypass Is Actived (Load)")
 
 Tab7:Label("Anti Cheat : Disabled")
 
@@ -1186,7 +1189,7 @@ Tab7:Button("Exit " .. Title1, function()
     player:Kick("You have successfully exited " .. Title1 .. ".")
 end)
 
-Tab7:Toggle("Night/Day", false, function(toggled)
+Tab7:Toggle("Night/Day (Change The Timer)", false, function(toggled)
     getgenv().night_mode_Enabled = toggled
 end)
 
@@ -1462,70 +1465,12 @@ Tab7:Dropdown("Anti Crash", {"Disable", "Anti Crash Basic", "Anti Crash Pro", "A
     end
 end)
 
-local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/SoyAdriYT/AstroX/main/LibraryUI/UI_Notification.lua')))()
-
-local warningIcon = "rbxassetid://7072718362"
-local fpsWarningGiven = false
-local pingWarningGiven = false
-local timeSinceFPSWarning = 0
-local timeSincePingWarning = 0
-local interval = 300
-
-function createNotification(title, text)
-    OrionLib:MakeNotification({
-        Name = title,
-        Content = text,
-        Image = warningIcon,
-        Time = 5
-    })
-end
-
-game:GetService("RunService").RenderStepped:Connect(function(deltaTime)
-    local fps = workspace:GetRealPhysicsFPS()
-    local ping = game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValue()
-
-    if fps < 50 then
-        if not fpsWarningGiven then
-            createNotification("FPS Warning", "FPS dropped to 50, this may cause issues with auto parry.")
-            fpsWarningGiven = true
-            timeSinceFPSWarning = 0
-        else
-            timeSinceFPSWarning = timeSinceFPSWarning + deltaTime
-            if timeSinceFPSWarning >= interval then
-                createNotification("FPS Warning", "FPS are still below 50 after 5 minutes. Auto parry may be affected.")
-                timeSinceFPSWarning = 0
-            end
-        end
-    end
-
-    if ping > 90 then
-        if not pingWarningGiven then
-            createNotification("Ping Warning", "Ping over 90 may cause issues with auto parry.")
-            pingWarningGiven = true
-            timeSincePingWarning = 0
-        else
-            timeSincePingWarning = timeSincePingWarning + deltaTime
-            if timeSincePingWarning >= interval then
-                createNotification("Ping Warning", "Ping is still above 90 after 5 minutes. Auto parry may be affected.")
-                timeSincePingWarning = 0
-            end
-        end
-    end
-end)
-
 local ScreenGui = Instance.new("ScreenGui")
 local ImageButton = Instance.new("ImageButton")
 local UICorner = Instance.new("UICorner")
 
-for _, gui in pairs(game.CoreGui:GetChildren()) do
-    if gui:IsA("ScreenGui") and gui.Name == "ScreenGui" then
-        gui:Destroy()
-    end
-end
-
 ScreenGui.Parent = game.CoreGui
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
-ScreenGui.Name = "ScreenGui"
 
 ImageButton.Parent = ScreenGui
 ImageButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
@@ -1541,11 +1486,4 @@ UICorner.CornerRadius = UDim.new(0, 10)
 
 ImageButton.MouseButton1Down:Connect(function()
     game:GetService("VirtualInputManager"):SendKeyEvent(true, "RightControl", false, game)
-end)
-    else
-        TextBox.PlaceholderText = "Invalid key. Try again."
-        TextBox.Text = ""
-        wait(1)
-        TextBox.PlaceholderText = "Enter Key..."
-    end
 end)

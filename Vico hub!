@@ -741,7 +741,7 @@ spawn(function()
     end
 end)
 
-local Title1 = "AstroX"
+local Title1 = "Vico Hub"
 local Key2 = "https://discord.gg/yZTduXkhMn"
 
 local MarketplaceService = game:GetService("MarketplaceService")
@@ -753,14 +753,14 @@ local gameName = success and gameInfo.Name or "Unknown Game"
 
 local Window = AstroXUI:Window(Title1, gameName)
 
-local Tab = Window:Tab("Home")
-local Tab2 = Window:Tab("Player")
-local Tab3 = Window:Tab("Main")
-local Tab4 = Window:Tab("Combat")
-local Tab5 = Window:Tab("Shop")
-local Tab7 = Window:Tab("Settings")
+local Tab = Window:Tab("|Home|")
+local Tab2 = Window:Tab("|Player|")
+local Tab3 = Window:Tab("|Main|")
+local Tab4 = Window:Tab("|Combat|")
+local Tab5 = Window:Tab("|Shop|")
+local Tab7 = Window:Tab("|Settings|")
 
-Tab:Label("Join our discord.")
+Tab:Label("Hey Join Our Community Discord!")
 Tab:Label("Creators G - MX2 and Alexisback.")
 Tab:line()
 Tab:Button("Copy link discord", function()

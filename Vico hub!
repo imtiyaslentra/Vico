@@ -1,3 +1,12 @@
+-- Import Orion Library
+local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Orion/main/source.lua"))()
+local Window = OrionLib:MakeWindow({
+    Name = "Blade Ball Script",
+    HidePremium = true,
+    SaveConfig = true,
+    ConfigFolder = "OrionTest"
+})
+
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
@@ -105,18 +114,9 @@ function toggleAutoSpam()
     print("Auto Spam is now " .. (autoSpamActive and "activated" or "deactivated"))
 end
 
--- Membuat UI menggunakan Orion Library
-local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Orion/main/source.lua"))()
-local Window = OrionLib:MakeWindow({
-    Name = "Vico Hub",
-    HidePremium = true,
-    SaveConfig = true,
-    ConfigFolder = "OrionTest"
-})
-
 -- Tab untuk pengaturan utama
 local Tab = Window:MakeTab({
-    Name = "Main (Parry)",
+    Name = "Main",
     Icon = "rbxassetid://4483362458",
     PremiumOnly = false
 })

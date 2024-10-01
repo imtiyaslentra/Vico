@@ -1,1975 +1,359 @@
-print("By : CodeWizards Network")
-print("By : 3XKtSdEnph")
-getgenv().botClient = false;
-getgenv().AutoParryEnabled = true;
-local players = game:GetService("Players");
-local lp = players.LocalPlayer;
-local rep = game:GetService("ReplicatedStorage");
-local rs = game:GetService("RunService");
-local lighting = game:GetService("Lighting");
-local ts = game:GetService("TweenService");
-local coreGui = game:GetService("CoreGui");
-local camera = workspace.CurrentCamera;
-local balls = workspace:WaitForChild("Balls");
-local remotesStorage = rep:WaitForChild("Remotes");
-local cdUI = coreGui:FindFirstChild("cdUI") or game:GetObjects("rbxassetid://14817688991")[1];
-cdUI.Name = "cdUI";
-cdUI.Parent = coreGui;
-local textl = cdUI:FindFirstChild("TextLabel");
-local function findBall()
-	local FlatIdent_95CAC = 0;
-	local self;
-	while true do
-		if (FlatIdent_95CAC == 0) then
-			self = balls:FindFirstChildOfClass("Part");
-			return self;
-		end
-	end
-end
-local function ParryAttempt(args)
-	remotesStorage:WaitForChild("ParryAttempt"):FireServer(unpack(args));
-end
-local function alive(plr)
-	if (plr and (plr.Character ~= nil) and plr.Character:FindFirstChild("HumanoidRootPart") and plr.Character:FindFirstChild("Humanoid") and (plr.Character:FindFirstChild("Humanoid").Health > 0)) then
-		return true;
-	end
-end
-local function getPing()
-	return game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValue();
-end
-local function say(text)
-	rep:WaitForChild("DefaultChatSystemChatEvents"):WaitForChild("SayMessageRequest"):FireServer(text, "All");
-end
-local function openCase(caseName)
-	local FlatIdent_76979 = 0;
-	while true do
-		if (FlatIdent_76979 == 1) then
-			remotesStorage:WaitForChild("Store"):WaitForChild("GetOwnedAbilities"):InvokeServer();
-			remotesStorage:WaitForChild("Store"):WaitForChild("GetOwnedSwordSkins"):InvokeServer();
-			break;
-		end
-		if (FlatIdent_76979 == 0) then
-			if (caseName == "Swords") then
-				remotesStorage:WaitForChild("Store"):WaitForChild("RequestOpenSwordBox"):InvokeServer();
-			elseif (caseName == "Explosions") then
-				remotesStorage:WaitForChild("Store"):WaitForChild("RequestOpenExplosionBox"):InvokeServer();
-			end
-			remotesStorage:WaitForChild("Store"):WaitForChild("GetOwnedExplosionFXes"):InvokeServer();
-			FlatIdent_76979 = 1;
-		end
-	end
-end
-function checkForInvisiblity(player)
-	local FlatIdent_24A02 = 0;
-	local char;
-	local torso;
-	local hlInChar;
-	while true do
-		if (FlatIdent_24A02 == 1) then
-			hlInChar = char:FindFirstChildOfClass("Highlight");
-			return torso and (torso.Transparency == 1) and hlInChar;
-		end
-		if (FlatIdent_24A02 == 0) then
-			char = player.Character;
-			torso = char:FindFirstChild("Torso");
-			FlatIdent_24A02 = 1;
-		end
-	end
-end
-local function getPlayers()
-	return players:GetPlayers();
-end
-local killSays = {Classic={},Toxic={},Rough={"This ball was flying so fast that when it hit you, your head was broken in half and your eyes fell out.","Even my horse, which was torn to pieces when colliding with reinforcement at high speed, was not as sad as your diaphragm, which was scattered all over the map","It's so nice to hear the crunch of bones","Let me throw a ball at you at least 500 times, but I wonÃ¢â‚¬â„¢t stop and will do it until you stop functioning and your blood no longer flows to the brain"},Troll={}};
-local thingsEnabled = {};
-local DesyncPart = Instance.new("Part");
-DesyncPart.Name = "offsetTrack";
-DesyncPart.CanCollide = false;
-DesyncPart.Size = Vector3.new(2, 2, 1);
-DesyncPart.Parent = workspace;
-DesyncPart.Transparency = 0;
-DesyncPart.Anchored = true;
-DesyncPart.Material = Enum.Material.ForceField;
-DesyncPart.Color = Color3.new(0, 0, 1);
-DesyncPart.CastShadow = false;
-local visualPart = Instance.new("Part", workspace);
-visualPart.Name = "VisualRange";
-visualPart.Anchored = true;
-visualPart.Position = Vector3.new(0, 1000, 0);
-visualPart.Size = Vector3.new(1, 1, 1);
-visualPart.Material = Enum.Material.SmoothPlastic;
-visualPart.Transparency = 0.5;
-visualPart.Color = Color3.new(0, 0, 1);
-visualPart.CanCollide = false;
-visualPart.Shape = Enum.PartType.Ball;
-visualPart.CastShadow = false;
-local hitParticleEmit = 5;
-local hitParticle_Star = {particle=game:GetObjects("rbxassetid://14760973807")[1],att=Instance.new("Attachment"),particles={Star="http://www.roblox.com/asset/?id=14752022090",Heart="http://www.roblox.com/asset/?id=14760963240"}};
-hitParticle_Star.att.Parent = workspace.Terrain;
-hitParticle_Star.particle.Parent = hitParticle_Star.att;
-local ballTrail = {part=Instance.new("Part", workspace),trail=game:GetObjects("rbxassetid://14752577455")[1],att0=Instance.new("Attachment"),att1=Instance.new("Attachment")};
-ballTrail.part.Name = "TrailAttach";
-ballTrail.part.Size = Vector3.new(3, 3, 3);
-ballTrail.part.Position = Vector3.new(0, 10000, 0);
-ballTrail.part.Anchored = true;
-ballTrail.part.CanCollide = false;
-ballTrail.part.Transparency = 1;
-ballTrail.part.CastShadow = false;
-ballTrail.att0.Parent = ballTrail.part;
-ballTrail.att0.Position = Vector3.new(0, 2, 0);
-ballTrail.att1.Parent = ballTrail.part;
-ballTrail.att1.Position = Vector3.new(0, -2, 0);
-ballTrail.trail.Parent = ballTrail.part;
-ballTrail.trail.Attachment0 = ballTrail.att0;
-ballTrail.trail.Attachment1 = ballTrail.att1;
-local targetEspParticle = {particle=game:GetObjects("rbxassetid://14752415197")[1],att=Instance.new("Attachment")};
-targetEspParticle.att.Parent = workspace.Terrain;
-targetEspParticle.particle.Parent = targetEspParticle.att;
-targetEspParticle.particle.Enabled = false;
-local SelfTrail = {part=Instance.new("Part", workspace),trail=game:GetObjects("rbxassetid://14752421767")[1],att0=Instance.new("Attachment"),att1=Instance.new("Attachment")};
-SelfTrail.part.Name = "SelfTrailAttach";
-SelfTrail.part.Size = Vector3.new(2, 2, 1);
-SelfTrail.part.Position = Vector3.new(0, 10000, 0);
-SelfTrail.part.Anchored = true;
-SelfTrail.part.CanCollide = false;
-SelfTrail.part.Transparency = 1;
-SelfTrail.part.CastShadow = false;
-SelfTrail.att0.Parent = SelfTrail.part;
-SelfTrail.att0.Position = Vector3.new(0, 2, 0);
-SelfTrail.att1.Parent = SelfTrail.part;
-SelfTrail.att1.Position = Vector3.new(0, -3, 0);
-SelfTrail.trail.Parent = SelfTrail.part;
-SelfTrail.trail.Attachment0 = SelfTrail.att0;
-SelfTrail.trail.Attachment1 = SelfTrail.att1;
-local JumpCircle = {particle=game:GetObjects("rbxassetid://14752597799")[1],att=Instance.new("Attachment")};
-JumpCircle.att.Parent = workspace.Terrain;
-JumpCircle.particle.Parent = JumpCircle.att;
-getgenv()._HitSound = game:GetObjects("rbxassetid://14788717719")[1];
-getgenv()._HitSound.Parent = workspace;
-getgenv().AmbientVFX = game:GetObjects("rbxassetid://14789556807")[1];
-getgenv().AmbientVFX.Parent = workspace;
-local ColorTheme = {Color3.fromRGB(119, 8, 255),Color3.fromRGB(16, 207, 255)};
-local oldColorTheme = ColorTheme;
-DesyncPart.Color = ColorTheme[1];
-visualPart.Color = ColorTheme[1];
-hitParticle_Star.particle.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, ColorTheme[1]),ColorSequenceKeypoint.new(1, ColorTheme[2])});
-ballTrail.trail.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, ColorTheme[1]),ColorSequenceKeypoint.new(1, ColorTheme[2])});
-targetEspParticle.particle.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, ColorTheme[1]),ColorSequenceKeypoint.new(1, ColorTheme[2])});
-SelfTrail.trail.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, ColorTheme[1]),ColorSequenceKeypoint.new(1, ColorTheme[2])});
-JumpCircle.particle.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, ColorTheme[1]),ColorSequenceKeypoint.new(1, ColorTheme[2])});
-getgenv().AmbientVFX.ParticleEmitter.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, ColorTheme[1]),ColorSequenceKeypoint.new(1, ColorTheme[2])});
-local CheckForNewTheme = coroutine.create(function()
-	while task.wait(0.3) do
-		if (oldColorTheme ~= ColorTheme) then
-			local FlatIdent_89ECE = 0;
-			while true do
-				if (FlatIdent_89ECE == 1) then
-					visualPart.Color = ColorTheme[1];
-					hitParticle_Star.particle.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, ColorTheme[1]),ColorSequenceKeypoint.new(1, ColorTheme[2])});
-					FlatIdent_89ECE = 2;
-				end
-				if (FlatIdent_89ECE == 0) then
-					oldColorTheme = ColorTheme;
-					DesyncPart.Color = ColorTheme[1];
-					FlatIdent_89ECE = 1;
-				end
-				if (FlatIdent_89ECE == 4) then
-					getgenv().AmbientVFX.ParticleEmitter.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, ColorTheme[1]),ColorSequenceKeypoint.new(1, ColorTheme[2])});
-					break;
-				end
-				if (FlatIdent_89ECE == 2) then
-					ballTrail.trail.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, ColorTheme[1]),ColorSequenceKeypoint.new(1, ColorTheme[2])});
-					targetEspParticle.particle.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, ColorTheme[1]),ColorSequenceKeypoint.new(1, ColorTheme[2])});
-					FlatIdent_89ECE = 3;
-				end
-				if (FlatIdent_89ECE == 3) then
-					SelfTrail.trail.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, ColorTheme[1]),ColorSequenceKeypoint.new(1, ColorTheme[2])});
-					JumpCircle.particle.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, ColorTheme[1]),ColorSequenceKeypoint.new(1, ColorTheme[2])});
-					FlatIdent_89ECE = 4;
-				end
-			end
-		end
-	end
-end);
-coroutine.resume(CheckForNewTheme);
-local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/PromiseCW/CodeWizards/main/Lib"))();
-local main = library.CreateMain();
-local combatTab = main.CreateTab({name="Combat", icon = 98792525});
-local combatCategory_main = combatTab.CreateCategory({name="Main"});
-task.spawn(function()
-	getgenv().parryTarget = "Closest";
-	getgenv().canParry = false;
-	getgenv().ballChangedTarget = nil;
-	local aiEyePart = Instance.new("Part", workspace);
-	aiEyePart.Name = "AIEyePart";
-	aiEyePart.Anchored = true;
-	aiEyePart.CanCollide = false;
-	aiEyePart.CastShadow = false;
-	aiEyePart.Shape = Enum.PartType.Ball;
-	aiEyePart.Size = Vector3.new(3, 3, 3);
-	aiEyePart.Position = Vector3.zero;
-	aiEyePart.Transparency = 1;
-	local AutoBlockEnabled = false;
-	local lastTarget = nil;
-	local AI_lastRotated = tick();
-	local lastHit = tick();
-	local hLoop;
-	combatCategory_main.CreateLabel({name="Auto-Parry v1",side="left"});
-	combatCategory_main.CreateToggle({name="Enabled",enabled=getgenv().AutoParryEnabled,callback=function(state)
-		AutoBlockEnabled = state;
-		local func = coroutine.create(function()
-			if state then
-				if (hLoop == nil) then
-					hLoop = rs.Heartbeat:Connect(function()
-						if alive(lp) then
-							local FlatIdent_31A5A = 0;
-							local ball;
-							while true do
-								if (FlatIdent_31A5A == 0) then
-									ball = findBall();
-									if ball then
-										local FlatIdent_5ED46 = 0;
-										local ballTarget;
-										local dis;
-										local speed;
-										local move;
-										local ping;
-										local CalculatedSpeed;
-										local ElementaryHitbox;
-										local minDis;
-										local playersId;
-										local targetDis;
-										local PlayersToSort;
-										local targetInPlr;
-										local lastedCd;
-										local looking;
-										local lookDirection;
-										local dot;
-										local angle;
-										local BonusCooldown;
-										local ClassicCooldown;
-										local SharedSpeed;
-										local SharedDistance;
-										local hitCd;
-										while true do
-											if (FlatIdent_5ED46 == 8) then
-												SharedSpeed = math.clamp(speed / 550, 0, 0.3);
-												SharedDistance = 0.4 / math.clamp(targetDis / 40, 0, 100);
-												hitCd = ((ClassicCooldown - SharedSpeed) - SharedDistance) + BonusCooldown;
-												hit = math.clamp(hitCd, 0, 1);
-												FlatIdent_5ED46 = 9;
-											end
-											if (1 == FlatIdent_5ED46) then
-												dis = (ball.Position - lp.Character.HumanoidRootPart.Position).Magnitude;
-												speed = ball.Velocity.Magnitude;
-												move = lp.Character.Humanoid.MoveDirection;
-												ping = getPing();
-												FlatIdent_5ED46 = 2;
-											end
-											if (FlatIdent_5ED46 == 0) then
-												if (getgenv().TargetBallEnabled and (getgenv().TargetBallSpeed ~= nil) and (getgenv().TargetBallDistance ~= nil)) then
-													local FlatIdent_8CEDF = 0;
-													local sin;
-													local cos;
-													local mathPos;
-													local lookEye;
-													while true do
-														if (FlatIdent_8CEDF == 1) then
-															mathPos = Vector3.new(ball.Position.X + sin, ball.Position.Y, ball.Position.z + cos);
-															lookEye = Vector3.new(ball.Position.X, lp.Character.HumanoidRootPart.Position.Y, ball.Position.Z);
-															FlatIdent_8CEDF = 2;
-														end
-														if (FlatIdent_8CEDF == 2) then
-															lp.Character.HumanoidRootPart.CFrame = CFrame.new(mathPos, lookEye);
-															break;
-														end
-														if (FlatIdent_8CEDF == 0) then
-															sin = math.sin(tick() * getgenv().TargetBallSpeed) * getgenv().TargetBallDistance;
-															cos = math.cos(tick() * getgenv().TargetBallSpeed) * getgenv().TargetBallDistance;
-															FlatIdent_8CEDF = 1;
-														end
-													end
-												end
-												if ((0.1 > ball.Velocity.Magnitude) or ball.Anchored) then
-													return;
-												end
-												ballTarget = ball:GetAttributes().target;
-												if thingsEnabled.BallTrailEnabled then
-													ballTrail.part.CFrame = ball.CFrame;
-												end
-												FlatIdent_5ED46 = 1;
-											end
-											if (FlatIdent_5ED46 == 5) then
-												targetInPlr = players:FindFirstChild(lastTarget);
-												if (thingsEnabled.TargetEspEnabled and (lastTarget ~= nil) and players:FindFirstChild(lastTarget) and alive(players[lastTarget])) then
-													local FlatIdent_8BF78 = 0;
-													local hrp_1;
-													while true do
-														if (FlatIdent_8BF78 == 0) then
-															hrp_1 = players[lastTarget].Character.HumanoidRootPart;
-															targetEspParticle.att.WorldPosition = hrp_1.Position;
-															FlatIdent_8BF78 = 1;
-														end
-														if (1 == FlatIdent_8BF78) then
-															targetEspParticle.particle.Enabled = true;
-															break;
-														end
-													end
-												else
-													targetEspParticle.particle.Enabled = false;
-												end
-												if thingsEnabled.Ai then
-													local FlatIdent_27404 = 0;
-													local TargetCF;
-													while true do
-														if (FlatIdent_27404 == 1) then
-															if ((lastTarget ~= nil) and workspace.Alive:FindFirstChild(lp.Name)) then
-																local FlatIdent_2A862 = 0;
-																while true do
-																	if (FlatIdent_2A862 == 0) then
-																		if (math.random(500) == 500) then
-																			if (lp.Character.Humanoid.FloorMaterial ~= Enum.Material.Air) then
-																				lp.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping);
-																			end
-																		end
-																		if (ballTarget ~= lp.Name) then
-																			if (targetInPlr and alive(targetInPlr)) then
-																				ts:Create(aiEyePart, TweenInfo.new(1.5), {CFrame=targetInPlr.Character.HumanoidRootPart.CFrame}):Play();
-																				local startEye = lp.Character.HumanoidRootPart.Position;
-																				local lookEye = Vector3.new(aiEyePart.Position.X, startEye.Y, aiEyePart.Position.Z);
-																				lp.Character.Humanoid:MoveTo(aiEyePart.Position + (aiEyePart.CFrame.LookVector * (math.clamp(200 - (speed * 2.5), 1, 200))));
-																				lp.Character.HumanoidRootPart.CFrame = CFrame.new(lp.Character.HumanoidRootPart.Position, lookEye);
-																				AI_lastRotated = tick();
-																			end
-																		else
-																			local FlatIdent_75B50 = 0;
-																			local startEye;
-																			local lookEye;
-																			while true do
-																				if (FlatIdent_75B50 == 1) then
-																					lookEye = Vector3.new(aiEyePart.Position.X, startEye.Y, aiEyePart.Position.Z);
-																					lp.Character.HumanoidRootPart.CFrame = CFrame.new(lp.Character.HumanoidRootPart.Position, lookEye);
-																					FlatIdent_75B50 = 2;
-																				end
-																				if (FlatIdent_75B50 == 2) then
-																					lp.Character.Humanoid:MoveTo(lp.Character.HumanoidRootPart.Position);
-																					break;
-																				end
-																				if (FlatIdent_75B50 == 0) then
-																					if ((tick() - AI_lastRotated) <= 0.2) then
-																						ts:Create(aiEyePart, TweenInfo.new(0.5), {CFrame=(lp.Character.HumanoidRootPart.CFrame + Vector3.new(math.random(-50, 50), 0, math.random(-50, 50)))}):Play();
-																					end
-																					startEye = lp.Character.HumanoidRootPart.Position;
-																					FlatIdent_75B50 = 1;
-																				end
-																			end
-																		end
-																		break;
-																	end
-																end
-															else
-																lp.Character.Humanoid:MoveTo(lp.Character.HumanoidRootPart.Position);
-															end
-															break;
-														end
-														if (FlatIdent_27404 == 0) then
-															if getgenv().TargetBallEnabled then
-																return;
-															end
-															TargetCF = nil;
-															FlatIdent_27404 = 1;
-														end
-													end
-												end
-												for _, v in pairs(players:GetPlayers()) do
-													if (alive(v) and (v ~= lp) and workspace.Alive:FindFirstChild(v.Name)) then
-														local FlatIdent_61EE = 0;
-														local plrDis;
-														while true do
-															if (0 == FlatIdent_61EE) then
-																plrDis = (v.Character.HumanoidRootPart.Position - lp.Character.HumanoidRootPart.Position).Magnitude;
-																if (v.Name == lastTarget) then
-																	targetDis = plrDis;
-																end
-																break;
-															end
-														end
-													end
-												end
-												FlatIdent_5ED46 = 6;
-											end
-											if (FlatIdent_5ED46 == 9) then
-												if ((dis <= minDis) and (ballTarget == lp.Name) and (lastedCd >= hitCd)) then
-													local FlatIdent_89237 = 0;
-													local args;
-													while true do
-														if (FlatIdent_89237 == 2) then
-															textl.Text = hitCd;
-															args = {[1]=1.5,[2]=lp.Character.HumanoidRootPart.CFrame,[3]=playersId,[4]={[1]=ball.Name,[2]=ball.Name}};
-															FlatIdent_89237 = 3;
-														end
-														if (FlatIdent_89237 == 3) then
-															ParryAttempt(args);
-															if thingsEnabled.HitSoundEnabled then
-																getgenv()._HitSound:Play();
-															end
-															FlatIdent_89237 = 4;
-														end
-														if (FlatIdent_89237 == 4) then
-															if thingsEnabled.HitParticleEnabled then
-																local FlatIdent_3CF36 = 0;
-																while true do
-																	if (0 == FlatIdent_3CF36) then
-																		hitParticle_Star.att.Position = ball.Position;
-																		hitParticle_Star.particle:Emit(hitParticleEmit);
-																		break;
-																	end
-																end
-															end
-															lastHit = tick();
-															break;
-														end
-														if (FlatIdent_89237 == 0) then
-															print("SharedSpeed:", SharedSpeed);
-															print("SharedDistance:", SharedDistance);
-															FlatIdent_89237 = 1;
-														end
-														if (FlatIdent_89237 == 1) then
-															print("BonusCooldown:", BonusCooldown);
-															print("hitCd:", hitCd);
-															FlatIdent_89237 = 2;
-														end
-													end
-												end
-												break;
-											end
-											if (FlatIdent_5ED46 == 4) then
-												for _, v in pairs(players:GetPlayers()) do
-													if ((v ~= lp) and alive(v) and workspace.Alive:FindFirstChild(v.Name)) then
-														table.insert(PlayersToSort, v);
-													end
-												end
-												if (ballTarget == lp.Name) then
+local Library = loadstring(game:HttpGet("https://pi-hub3-14.vercel.app/lib/ui.lua"))()
 
-													if thingsEnabled.AutoGhostEnabled then
+local Main = Library:Create("Pi Hub - BladeBall")
+local TabH = Main.MakeTab("Pi Hub - BladeBall (Home)", 18899804355)
 
-														local FlatIdent_E0D0 = 0;
+local Sections = {
+    ['Home'] = {
+        Main = TabH.MakeSection("Main"), -- Tab.MakeSection(<string: Section_Name>)
+        Game = TabH.MakeSection("Game")
+    }
+}
 
-														while true do
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local VirtualUser = game:GetService("VirtualUser")
 
-															if (FlatIdent_E0D0 == 0) then
+local player = Players.LocalPlayer
+local camera = workspace.CurrentCamera
 
-																remotesStorage:WaitForChild("PlrInvisibilityd"):FireServer();
+local RandRNG = math.random()
+local RandAutoaParry = {[tostring(RandRNG)] = false}
 
-																remotesStorage:WaitForChild("Telekinesis"):FireServer({[1]=lp.Character.HumanoidRootPart.CFrame,[2]=PlayersToSort,[3]={[1]=ball.Name,[2]=ball.Name}});
+local main = Sections.Home.Main
+main.Label("Welcome To Pi Hub!")
+main.Label("Join Our Discord: https://discord.gg/dVSFmJYDdS")
 
-																break;
+local Ragebot = Sections.Home.Game
 
-															end
-
-														end
-
-													end
-
-												end
-
-												if (getgenv().parryTarget == "Closest") then
-
-													local FlatIdent_8DCA9 = 0;
-
-													while true do
-
-														if (FlatIdent_8DCA9 == 0) then
-
-															table.sort(PlayersToSort, function(plr1, plr2)
-
-																local dis1 = (plr1.Character.HumanoidRootPart.Position - lp.Character.HumanoidRootPart.Position).Magnitude;
-
-																local dis2 = (plr2.Character.HumanoidRootPart.Position - lp.Character.HumanoidRootPart.Position).Magnitude;
-
-																return dis1 < dis2;
-
-															end);
-
-															playersId[PlayersToSort[1].UserId] = PlayersToSort[1].Character.HumanoidRootPart.Position;
-
-															break;
-
-														end
-
-													end
-
-												elseif (getgenv().parryTarget == "Random") then
-
-													local FlatIdent_39EBF = 0;
-
-													local randomTarget;
-
-													while true do
-
-														if (FlatIdent_39EBF == 0) then
-
-															randomTarget = PlayersToSort[math.random(1, #PlayersToSort)];
-
-															playersId[randomTarget.UserId] = randomTarget.Character.HumanoidRootPart.Position;
-
-															break;
-
-														end
-
-													end
-
-												end
-
-												lastTarget = ((ballTarget ~= lp.Name) and ballTarget) or PlayersToSort[1].Name;
-
-												FlatIdent_5ED46 = 5;
-
-											end
-
-											if (FlatIdent_5ED46 == 6) then
-
-												lastedCd = tick() - lastHit;
-
-												looking = lp.Character.HumanoidRootPart.CFrame.LookVector;
-
-												lookDirection = (lp.Character.HumanoidRootPart.Position - targetInPlr.Character.HumanoidRootPart.Position).Unit;
-
-												dot = looking:Dot(lookDirection);
-
-												FlatIdent_5ED46 = 7;
-
-											end
-
-											if (FlatIdent_5ED46 == 3) then
-
-												visualPart.Size = Vector3.new(minDis, minDis, minDis);
-
-												playersId = {};
-
-												targetDis = 0;
-
-												PlayersToSort = {};
-
-												FlatIdent_5ED46 = 4;
-
-											end
-
-											if (FlatIdent_5ED46 == 2) then
-
-												CalculatedSpeed = math.clamp((speed / 4) + (ping / 50), 0, 8999999488);
-
-												ElementaryHitbox = 3 + (ping / 40);
-
-												minDis = ElementaryHitbox + CalculatedSpeed;
-
-												visualPart.CFrame = lp.Character.HumanoidRootPart.CFrame;
-
-												FlatIdent_5ED46 = 3;
-
-											end
-
-											if (7 == FlatIdent_5ED46) then
-
-												angle = math.acos(dot);
-
-												angle = math.deg(angle);
-
-												BonusCooldown = math.clamp((1 / angle) / (speed / 50), 0, 0.1);
-
-												ClassicCooldown = 1;
-
-												FlatIdent_5ED46 = 8;
-
-											end
-
-										end
-
-									end
-
-									break;
-
-								end
-
-							end
-
-						end
-
-					end);
-
-				end
-
-			else
-
-				visualPart.Position = Vector3.new(0, 10000, 0);
-
-				if (hLoop ~= nil) then
-
-					local FlatIdent_4D434 = 0;
-
-					while true do
-
-						if (FlatIdent_4D434 == 0) then
-
-							hLoop:Disconnect();
-
-							hLoop = nil;
-
-							break;
-
-						end
-
-					end
-
-				end
-
-			end
-
-		end);
-
-		coroutine.resume(func);
-
-	end});
-
-	combatCategory_main.CreateDropdown({name="Target",side="left",objects={"Random","Closest"},choosed="Closest",callback=function(state)
-
-		getgenv().parryTarget = state;
-
-	end});
-
-	combatCategory_main.CreateToggle({name="AI",side="left",callback=function(state)
-
-		thingsEnabled.Ai = (state and true) or nil;
-
-	end});
-
-end);
-
-task.spawn(function()
-
-	local FlatIdent_45D37 = 0;
-
-	while true do
-
-		if (FlatIdent_45D37 == 2) then
-
-			local function VerifyBall(Ball) -- Returns nil if the ball isn't a valid projectile; true if it's the right ball.
-
-		if typeof(Ball) == "Instance" and Ball:IsA("BasePart") and Ball:IsDescendantOf(Balls) and Ball:GetAttribute("realBall") == true then
-
-			return true
-
-		end
-
-	end
-
-
-
-	local function IsTarget() -- Returns true if we are the current target.
-
-		return (Player.Character and Player.Character:FindFirstChild("Highlight"))
-
-	end
-
-
-
-	local function Parry() -- Parries.
-
-		Remotes:WaitForChild("ParryButtonPress"):Fire()
-
-	end
-
-
-
-	-- The actual code
-
-
-
-	Balls.ChildAdded:Connect(function(Ball)
-
-		if not VerifyBall(Ball) then
-
-			return
-
-		end
-
-
-
-		print(`Ball Spawned: {Ball}`)
-
-
-
-		local OldPosition = Ball.Position
-
-		local OldTick = tick()
-
-
-
-		Ball:GetPropertyChangedSignal("Position"):Connect(function()
-
-			if IsTarget() then -- No need to do the math if we're not being attacked.
-
-				local Distance = (Ball.Position - workspace.CurrentCamera.Focus.Position).Magnitude
-
-				local Velocity = (OldPosition - Ball.Position).Magnitude -- Fix for .Velocity not working. Yes I got the lowest possible grade in accuplacer math.
-
-
-
-				print(`Distance: {Distance}\nVelocity: {Velocity}\nTime: {Distance / Velocity}`)
-
-
-
-				if (Distance / Velocity) <= 10 then -- Sorry for the magic number. This just works. No, you don't get a slider for this because it's 2am.
-
-					Parry()
-
-				end
-
-			end
-
-
-
-			if (tick() - OldTick >= 1/60) then -- Don't want it to update too quickly because my velocity implementation is aids. Yes, I tried Ball.Velocity. No, it didn't work.
-
-				OldTick = tick()
-
-				OldPosition = Ball.Position
-
-			end
-
-		end)
-
-	end)
-
-end,})
-
-
-
-function counter()
-
-	task.wait(Settings.Autoparry.Cooldown)
-
-	hitcd = false
-
-end
-
-workspace.Balls.ChildAdded:Connect(function(v)
-
-	v:GetPropertyChangedSignal("BrickColor"):Connect(function()
-
-		if v.BrickColor ~= color then
-
-			hitcd = false
-
-		end
-
-	end)
-
-	v:GetPropertyChangedSignal("Position"):Connect(function()
-
-		if Settings.Autoparry.Toggle and v["BrickColor"] == color then
-
-			if (estimateTime(v) < Settings.Autoparry.Range or getdistance(v) < Settings.Autoparry.ConstantRange) and not hitcd then
-
-				hitcd = true
-
-				task.spawn(counter)
-
-				print("Hit",Settings.Autoparry.Range,Settings.Autoparry.ConstantRange,Settings.Autoparry.Cooldown)
-
-				hit:FireServer(0.5,CFrame.new(),{},{})
-
-			end
-
-		end
-
-		task.wait()
-
-	end)
-
+Ragebot.Toggle("Auto Parry", false, function(t)
+    RandAutoaParry[tostring(RandRNG)] = t
 end)
 
+BaseDistance = 0
+Ragebot.Slider("Parry Base Distance", 0, 100, BaseDistance, function(t)
+    BaseDistance = t
+end)
 
+AutoWalk = false
+Ragebot.Toggle("Auto Walk", AutoWalk, function(t)
+    AutoWalk = t
+end)
 
+AutoDoubleJump = false
+Ragebot.Toggle("Auto Jump", AutoDoubleJump, function(t)
+    AutoDoubleJump = t
+end)
 
+AutoRealWalk = false
+Ragebot.Toggle("Realistic Auto Walk", AutoRealWalk, function(t)
+    AutoRealWalk = t
+end)
 
+PlayerSaftey = false
+Ragebot.Toggle("Player Saftey", PlayerSaftey, function(t)
+    PlayerSaftey = t
+end)
 
+PlayerSaftey_Distance = 10
+Ragebot.Slider("Player Saftey Distance", 0, 50, PlayerSaftey_Distance, function(v)
+    PlayerSaftey_Distance = v
+end)
 
-local miscTab = main.CreateTab({name="Misc", icon = 11162756258});
+local can_Execute = false
+if not getgenv().WalkSpeed_Mana then
+    getgenv().WalkSpeed_Mana = 35
+    can_Execute = true
+else
+    can_Execute = false
+end
 
-local miscCategory_self = miscTab.CreateCategory({name="Self"});
+Ragebot.Slider("Walk Speed", 0, 250, getgenv().WalkSpeed_Mana, function(v)
+    getgenv().WalkSpeed_Mana = v
+end)
 
-task.spawn(function()
+ws = false
+Ragebot.Toggle("Walk Speed", ws, function(t)
+    ws = t
+end)
 
-	local FlatIdent_581C8 = 0;
-
-	local SpinEnabled;
-
-	local y;
-
-	while true do
-
-		if (FlatIdent_581C8 == 1) then
-
-			miscCategory_self.CreateLabel({name="Spin",side="left"});
-
-			miscCategory_self.CreateToggle({name="Enabled",callback=function(state)
-
-				local FlatIdent_FA88 = 0;
-
-				local func;
-
-				while true do
-
-					if (FlatIdent_FA88 == 0) then
-
-						SpinEnabled = state;
-
-						func = coroutine.create(function()
-
-							if state then
-
-								repeat
-
-									task.wait();
-
-									if alive(lp) then
-
-										local FlatIdent_1CA5D = 0;
-
-										while true do
-
-											if (FlatIdent_1CA5D == 0) then
-
-												lp.Character.Humanoid.AutoRotate = false;
-
-												lp.Character.HumanoidRootPart.CFrame = lp.Character.HumanoidRootPart.CFrame * CFrame.Angles(0, math.rad(y), 0);
-
-												break;
-
-											end
-
-										end
-
-									end
-
-								until not SpinEnabled 
-
-								if alive(lp) then
-
-									lp.Character.Humanoid.AutoRotate = true;
-
-								end
-
-							elseif alive(lp) then
-
-								lp.Character.Humanoid.AutoRotate = true;
-
-							end
-
-						end);
-
-						FlatIdent_FA88 = 1;
-
-					end
-
-					if (FlatIdent_FA88 == 1) then
-
-						coroutine.resume(func);
-
-						break;
-
-					end
-
-				end
-
-			end});
-
-			FlatIdent_581C8 = 2;
-
+if can_Execute then
+    print("executed!")
+    spawn(function()
+        while task.wait() do
+            pcall(function()
+		if ws == true then
+                	game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = getgenv().WalkSpeed_Mana
 		end
+            end)
+        end
+    end)
+end
 
-		if (FlatIdent_581C8 == 2) then
+AutoWalkDistanceX = 12
+Ragebot.Slider("Auto Walk Distance X", -40, 40, AutoWalkDistanceX, function(t)
+    AutoWalkDistanceX = t
+end)
 
-			miscCategory_self.CreateSlider({name="Roll",max=180,min=-180,value=5,callback=function(state)
+AutoWalkDistanceZ = 13
+Ragebot.Slider("Auto Walk Distance Z", -40, 40, AutoWalkDistanceZ, function(t)
+    AutoWalkDistanceZ = t
+end)
 
-				y = state;
+ballaim = false
+Ragebot.Toggle("Aim At The Ball", ballaim, function(t)
+    ballaim = t
+end)
 
-			end});
+ClosestPlayer_var = false
+Ragebot.Toggle("Aim At Closest Player", ClosestPlayer_var, function(t)
+    ClosestPlayer_var = t
+end)
 
-			break;
+RandomTeleports = false
+Ragebot.Toggle("Random Teleports", RandomTeleports, function(t)
+    RandomTeleports = t
+end)
 
+TeleportDistanceX = 0
+Ragebot.Slider("Teleport Distance X", -40, 40, TeleportDistanceX, function(t)
+    TeleportDistanceX = t
+end)
+
+TeleportDistanceZ = 0
+Ragebot.Slider("Teleport Distance Z", -40, 40, TeleportDistanceZ, function(t)
+    TeleportDistanceZ = t
+end)
+
+function GetMouse()
+    local UserInputService = game:GetService("UserInputService")
+    return UserInputService:GetMouseLocation()  -- Ensure this is the correct method for your setup
+end
+
+function GetClosestPlayer()
+    local closestDistance = math.huge
+    local closestTarget = nil
+    for _, v in pairs(game:GetService("Workspace").Alive:GetChildren()) do
+        if v and v:FindFirstChild("HumanoidRootPart") and v ~= game.Players.LocalPlayer.Character then
+            local humanoidRootPart = v.HumanoidRootPart
+                local distance = (game.Players.LocalPlayer.Character.HumanoidRootPart.Position - v.HumanoidRootPart.Position).Magnitude --(Vector2.new(viewportPoint.X, viewportPoint.Y) - mousePos).magnitude
+                if distance < closestDistance then
+                    closestDistance = distance
+                    closestTarget = v
+                end
+        end
+    end
+    return closestTarget
+end
+
+spawn(function()
+    while task.wait() do
+        if PlayerSaftey then
+            if game.Players.LocalPlayer.Character.Parent.Name == "Dead" then return end
+            pcall(function()
+                if (GetClosestPlayer().HumanoidRootPart.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).Magnitude <= PlayerSaftey_Distance then
+                    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = GetClosestPlayer().HumanoidRootPart.CFrame * CFrame.new(-PlayerSaftey_Distance, 0, -PlayerSaftey_Distance)
+                end
+            end)
+        end
+    end
+end)
+
+function GetBall()
+    for i,v in pairs(game:GetService("Workspace").Balls:GetChildren()) do
+        if v:IsA("Part") then
+            return v
+        end
+    end
+    return nil
+end
+
+function GetBallfromplayerPos(Ball)
+    return (Ball.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).Magnitude
+end
+
+local function getSpeed(part)
+    if part:IsA("BasePart") then
+        local speed = part.Velocity.Magnitude
+        if speed > 1 then
+            return part, speed
+        end
+        return nil, nil
+    else
+        print("The provided instance is not a BasePart.")
+        return nil, nil
+    end
+end
+
+local function measureVerticalDistance(humanoidRootPart, targetPart)
+    local humanoidRootPartY = humanoidRootPart.Position.Y
+    local targetPartY = targetPart.Position.Y
+    local verticalDistance = math.abs(humanoidRootPartY - targetPartY)
+    return verticalDistance
+end
+
+function GetHotKey()
+	for i,v in pairs(game.Players.LocalPlayer.PlayerGui.Hotbar.Block.HotkeyFrame:GetChildren()) do
+		if v:IsA("TextLabel") then
+			return v.Text
 		end
+	end
+	return ""
+end
 
-		if (FlatIdent_581C8 == 0) then
+local text = game.Players.LocalPlayer.PlayerGui.Hotbar.Block.HotkeyFrame.F
+local KeyCodeBlock = text.Text
+text:GetPropertyChangedSignal("Text"):Connect(function()
+    KeyCodeBlock = text.Text
+end)
 
-			SpinEnabled = false;
+local CanSlash = false
+local BallSpeed = 0
 
-			y = 5;
-
-			FlatIdent_581C8 = 1;
-
-	remotesStorage:WaitForChild("CustomEmote"):FireServer(false, "Empyrean");
-
-									end
-
-									playAnim = lp.Character.Humanoid:LoadAnimation(EmotesList[EmotionChoosed]);
-
-									playAnim:Play();
-
-									repeat
-
-										task.wait();
-
-									until (alive(lp) ~= true) or not EmotionEnabled 
-
-									print("Resetting");
-
-								end
-
-							elseif (playAnim ~= nil) then
-
-								remotesStorage:WaitForChild("CustomEmote"):FireServer(false, "Empyrean");
-
-								playAnim:Stop();
-
-								playAnim = nil;
-
-							end
-
-							break;
-
+spawn(function()
+    while task.wait() do
+        if RandAutoaParry[tostring(RandRNG)] then
+            pcall(function()
+		for i, v in pairs(game:GetService("Workspace").Balls:GetChildren()) do
+                    if v:IsA("Part") then
+                        if not game.Players.LocalPlayer.Character:FindFirstChild("Highlight") then return end
+						local part, speed = getSpeed(v)
+                        if part and speed then
+                            local minDistance = 2.5 * (speed * 0.1) + 2
+                            if minDistance == 0 or minDistance <= 20 then
+                                BallSpeed = 23
+                            elseif minDistance == 20 or minDistance <= 88 then
+                                BallSpeed = 2.5 * (speed * 0.1) + 5
+                            elseif minDistance == 88 or minDistance <= 110 then
+                                BallSpeed = 90
+                            -- elseif minDistance >= 110 then
+                            --     BallSpeed = 2 * (speed * 0.1)
+                            end
+							if (game.Players.LocalPlayer.Character.HumanoidRootPart.Position - part.Position).Magnitude <= (BallSpeed) then -- (game.Players.LocalPlayer.Character.HumanoidRootPart.Position - part.Position).Magnitude <= minDistance and 
+                                CanSlash = true
+                            else
+                                CanSlash = false
+                            end
 						end
-
-					end
-
-				end);
-
-				FlatIdent_276C2 = 1;
-
-			end
-
-		end
-
-	end});
-
-	miscCategory_self.CreateDropdown({name="Emotion",side="right",objects={"Emote1","Emote2","Emote3","Emote4","Emote5","Emote6","Emote7","Menacing"},choosed="Menacing",callback=function(state)
-
-		EmotionChoosed = state;
-
-	end});
-
-end);
-
-task.spawn(function()
-
-	local FlatIdent_8E5B4 = 0;
-
-	local HitSoundEnabled;
-
-	local HitSounds;
-
-	local HitSoundChoosed;
-
-	local playAnim;
-
-	while true do
-
-		if (FlatIdent_8E5B4 == 2) then
-
-			miscCategory_self.CreateLabel({name="HitSound",side="right"});
-
-			miscCategory_self.CreateToggle({name="Enabled",side="right",callback=function(state)
-
-				thingsEnabled.HitSoundEnabled = (state and true) or nil;
-
-			end});
-
-			FlatIdent_8E5B4 = 3;
-
-		end
-
-		if (3 == FlatIdent_8E5B4) then
-
-			miscCategory_self.CreateDropdown({name="Sounds",side="right",objects={"MinecraftHit","MinecraftCrit","Neverlose","Teamfortress Bonk","Teamfortress Bell"},choosed="Neverlose",callback=function(state)
-
-				getgenv()._HitSound.SoundId = HitSounds[state];
-
-			end});
-
-			break;
-
-		end
-
-		if (FlatIdent_8E5B4 == 0) then
-
-			HitSoundEnabled = false;
-
-			HitSounds = {MinecraftHit="rbxassetid://8766809464",MinecraftCrit="rbxassetid://8458185621",Neverlose="rbxassetid://8679627751",["Teamfortress Bonk"]="rbxassetid://8255306220",["Teamfortress Bell"]="rbxassetid://2868331684"};
-
-			FlatIdent_8E5B4 = 1;
-
-		end
-
-		if (FlatIdent_8E5B4 == 1) then
-
-			HitSoundChoosed = "Neverlose";
-
-			playAnim = nil;
-
-			FlatIdent_8E5B4 = 2;
-
-		end
-
-	end
-
-end);
-
-local miscCategory_features = miscTab.CreateCategory({name="Features", icon = 14478582742});
-
-task.spawn(function()
-
-	local FlatIdent_1468D = 0;
-
-	while true do
-
-		if (FlatIdent_1468D == 0) then
-
-			miscCategory_features.CreateLabel({name="Auto Ability",side="left"});
-
-			miscCategory_features.CreateToggle({name="Enabled",enabled=getgenv().botClient,callback=function(state)
-
-				thingsEnabled.AutoGhostEnabled = (state and true) or nil;
-
-			end});
-
-			break;
-
-		end
-
-	end
-
-end);
-
-task.spawn(function()
-
-	local FlatIdent_651C5 = 0;
-
-	local AutoBuyEnabled;
-
-	local AutoBuyCase;
-
-	while true do
-
-		if (2 == FlatIdent_651C5) then
-
-			miscCategory_features.CreateDropdown({name="Case",objects={"Swords","Explosions"},choosed="Swords",callback=function(state)
-
-				AutoBuyCase = state;
-
-			end});
-
-			break;
-
-		end
-
-		if (FlatIdent_651C5 == 1) then
-
-			miscCategory_features.CreateLabel({name="Auto Buy",side="left"});
-
-			miscCategory_features.CreateToggle({name="Enabled",callback=function(state)
-
-				local FlatIdent_985A2 = 0;
-
-				local func;
-
-				while true do
-
-					if (FlatIdent_985A2 == 0) then
-
-						func = coroutine.create(function()
-
-							local FlatIdent_512FF = 0;
-
-							while true do
-
-								if (FlatIdent_512FF == 0) then
-
-									AutoBuyEnabled = state;
-
-									if state then
-
-										repeat
-
-											local FlatIdent_829F9 = 0;
-
-											while true do
-
-												if (FlatIdent_829F9 == 0) then
-
-													openCase(AutoBuyCase);
-
-													task.wait(0.3);
-
-													break;
-
-												end
-
-											end
-
-										until not AutoBuyEnabled 
-
-									end
-
-									break;
-
-								end
-
-							end
-
-						end);
-
-						coroutine.resume(func);
-
-						break;
-
-					end
-
-				end
-
-			end});
-
-			FlatIdent_651C5 = 2;
-
-		end
-
-		if (FlatIdent_651C5 == 0) then
-
-			AutoBuyEnabled = false;
-
-			AutoBuyCase = "Swords";
-
-			FlatIdent_651C5 = 1;
-
-		end
-
-	end
-
-end);
-
-local miscCategory_exploits = miscTab.CreateCategory({name="Exploits",side="left"});
-
-task.spawn(function()
-
-	local FlatIdent_89562 = 0;
-
-	local abilityChoosedToSpam;
-
-	local abilitySpamEnabled;
-
-	while true do
-
-		if (FlatIdent_89562 == 1) then
-
-			function ThunderDashSpam()
-
-				local checkedPlayers = {};
-
-				for _, v in pairs(getPlayers()) do
-
-					if ((v ~= lp) and alive(v)) then
-
-						table.insert(checkedPlayers, v);
-
-					end
-
-				end
-
-				if (1 > #checkedPlayers) then
-
-					return;
-
-				end
-
-				local randomPlayer = checkedPlayers[math.random(1, #checkedPlayers)];
-
-				remotesStorage:WaitForChild("ThunderDash"):FireServer(randomPlayer.Character.HumanoidRootPart.Position);
-
-			end
-
-			miscCategory_exploits.CreateLabel({name="Spam Ability",side="left"});
-
-			FlatIdent_89562 = 2;
-
-		end
-
-		if (FlatIdent_89562 == 0) then
-
-			abilityChoosedToSpam = "ThunderDash";
-
-			abilitySpamEnabled = false;
-
-			FlatIdent_89562 = 1;
-
-		end
-
-		if (FlatIdent_89562 == 2) then
-
-			miscCategory_exploits.CreateToggle({name="Enabled",side="left",callback=function(state)
-
-				local FlatIdent_835BC = 0;
-
-				local func;
-
-				while true do
-
-					if (FlatIdent_835BC == 1) then
-
-						coroutine.resume(func);
-
-						break;
-
-					end
-
-					if (0 == FlatIdent_835BC) then
-
-						abilitySpamEnabled = state;
-
-						func = coroutine.create(function()
-
-							if (1 == FlatIdent_5CA49) then
-
-			renderCategory_self.CreateToggle({name="Enabled",callback=function(state)
-
-				TrailEnabled = state;
-
-				local func = coroutine.create(function()
-
-					if state then
-
-						repeat
-
-							local FlatIdent_90E07 = 0;
-
-							while true do
-
-								if (FlatIdent_90E07 == 0) then
-
-									if alive(lp) then
-
-										SelfTrail.part.CFrame = lp.Character.HumanoidRootPart.CFrame;
-
-									end
-
-									rs.Heartbeat:Wait();
-
-									break;
-
-								end
-
-							end
-
-						until not TrailEnabled 
-
-					end
-
-				end);
-
-				coroutine.resume(func);
-
-			end});
-
-			renderCategory_self.CreateSlider({name="LifeTime",side="left",max=2.1,min=0.1,value=0.15,callback=function(state)
-
-				local FlatIdent_508D4 = 0;
-
-				while true do
-
-					if (FlatIdent_508D4 == 0) then
-
-						SelfTrail.trail.Lifetime = state;
-
-						print(SelfTrail.trail.Lifetime);
-
-						break;
-
-					end
-
-				end
-
-			end});
-
-			break;
-
-		end
-
-		if (FlatIdent_5CA49 == 0) then
-
-			TrailEnabled = false;
-
-			renderCategory_self.CreateLabel({name="Trail",side="left"});
-
-			FlatIdent_5CA49 = 1;
-
-		end
-
-	end
-
-end);
-
-task.spawn(function()
-
-	local FlatIdent_8A9D7 = 0;
-
-	local JumpCircleEnabled;
-
-	while true do
-
-		if (FlatIdent_8A9D7 == 0) then
-
-			JumpCircleEnabled = false;
-
-			renderCategory_self.CreateLabel({name="JumpCircle",side="left"});
-
-			FlatIdent_8A9D7 = 1;
-
-		end
-
-		if (FlatIdent_8A9D7 == 1) then
-
-			renderCategory_self.CreateToggle({name="Enabled",callback=function(state)
-
-				thingsEnabled.JumpCircleEnabled = (state and true) or nil;
-
-			end});
-
-			renderCategory_self.CreateSlider({name="LifeTime",side="left",max=3,min=0.1,value=1,callback=function(state)
-
-				JumpCircle.particle.Lifetime = NumberRange.new(state);
-
-			end});
-
-			break;
-
-		end
-
-	end
-
-end);
-
-local renderCategory_players = renderTab.CreateCategory({name="Players"});
-
-task.spawn(function()
-
-	local EspEnabled = false;
-
-	renderCategory_players.CreateLabel({name="TargetEsp",side="left"});
-
-	renderCategory_players.CreateToggle({name="Enabled",callback=function(state)
-
-		thingsEnabled.TargetEspEnabled = (state and true) or nil;
-
-	end});
-
-end);
-
-local Tab_Themes = main.CreateTab({name="Settings", icon = 3599164218});
-
-local ThemesCategory_ui = Tab_Themes.CreateCategory({name="Ui"});
-
-task.spawn(function()
-
-	local FlatIdent_22A5C = 0;
-
-	while true do
-
-		if (FlatIdent_22A5C == 1) then
-
-			ThemesCategory_ui.CreateTheme({name="Moon",color=Color3.fromRGB(152, 221, 211),color2=Color3.fromRGB(93, 74, 249),callback=function(state)
-
-				ColorTheme = state;
-
-			end});
-
-			ThemesCategory_ui.CreateTheme({name="Blood",color=Color3.fromRGB(197, 55, 109),color2=Color3.fromRGB(85, 21, 11),callback=function(state)
-
-				ColorTheme = state;
-
-			end});
-
-			FlatIdent_22A5C = 2;
-
-		end
-
-		if (FlatIdent_22A5C == 2) then
-
-			ThemesCategory_ui.CreateTheme({name="Toxic",color=Color3.fromRGB(111, 242, 122),color2=Color3.fromRGB(8, 72, 112),callback=function(state)
-
-				ColorTheme = state;
-
-			end});
-
-			ThemesCategory_ui.CreateTheme({name="Warm",color=Color3.fromRGB(234, 135, 77),color2=Color3.fromRGB(111, 88, 199),callback=function(state)
-
-				ColorTheme = state;
-
-			end});
-
-			FlatIdent_22A5C = 3;
-
-		end
-
-		if (0 == FlatIdent_22A5C) then
-
-			ThemesCategory_ui.CreateLabel({name="Themes",side="left"});
-
-			ThemesCategory_ui.CreateTheme({name="Cosmic",color=Color3.fromRGB(3, 192, 255),color2=Color3.fromRGB(16, 31, 255),callback=function(state)
-
-				ColorTheme = state;
-
-			end});
-
-			ThemesCategory_ui.CreateTheme({name="SoftPink Fusion",color=Color3.fromRGB(255, 20, 147),color2=Color3.fromRGB(219, 112, 147),callback=function(state)
-
-				ColorTheme = state;
-
-			end});
-
-			ThemesCategory_ui.CreateTheme({name="SlateOrange",color=Color3.fromRGB(255, 165, 0),color2=Color3.fromRGB(106, 90, 205),callback=function(state)
-
-				ColorTheme = state;
-
-			end});
-
-			ThemesCategory_ui.CreateTheme({name="Chartreuse",color=Color3.fromRGB(0, 128, 0),color2=Color3.fromRGB(255, 255, 0),callback=function(state)
-
-				ColorTheme = state;
-
-			end});
-
-			ThemesCategory_ui.CreateTheme({name="Deep Ocean Blend",color=Color3.fromRGB(72, 61, 139),color2=Color3.fromRGB(0, 206, 209),callback=function(state)
-
-				ColorTheme = state;
-
-			end});
-
-			ThemesCategory_ui.CreateTheme({name="Celestial Magenta",color=Color3.fromRGB(135, 206, 235),color2=Color3.fromRGB(255, 0, 255),callback=function(state)
-
-				ColorTheme = state;
-
-			end});
-
-			ThemesCategory_ui.CreateTheme({name="Elegant Contrast",color=Color3.fromRGB(0, 0, 0),color2=Color3.fromRGB(245, 245, 220),callback=function(state)
-
-				ColorTheme = state;
-
-			end});
-
-			FlatIdent_22A5C = 1;
-
-		end
-
-		if (FlatIdent_22A5C == 3) then
-
-			ThemesCategory_ui.CreateTheme({name="Violet",color=Color3.fromRGB(190, 183, 241),color2=Color3.fromRGB(113, 68, 164),callback=function(state)
-
-				ColorTheme = state;
-
-			end});
-
-			break;
-
-		end
-
-	end
-
-end);
-
-task.spawn(function()
-
-	local FlatIdent_2C7C4 = 0;
-
-	local blurEnabled;
-
-	local blurSize;
-
-	local clientBlur;
-
-	while true do
-
-		if (FlatIdent_2C7C4 == 3) then
-
-			ThemesCategory_ui.CreateToggle({name="Blur",enabled=true,side="right",callback=function(state)
-
-				local FlatIdent_23FF9 = 0;
-
-				local func;
-
-				while true do
-
-					if (FlatIdent_23FF9 == 0) then
-
-						func = coroutine.create(function()
-
-							local FlatIdent_61084 = 0;
-
-							while true do
-
-								if (FlatIdent_61084 == 0) then
-
-									blurEnabled = state;
-
-									if state then
-
-										local FlatIdent_69D54 = 0;
-
-										while true do
-
-											if (FlatIdent_69D54 == 0) then
-
-												repeat
-
-													local FlatIdent_7C57C = 0;
-
-													local mainUI;
-
-													while true do
-
-														if (FlatIdent_7C57C == 1) then
-
-															if (mainUI and mainUI.Enabled) then
-
-																ts:Create(clientBlur, TweenInfo.new(0.4), {Size=tonumber(blurSize)}):Play();
-
-															else
-
-																ts:Create(clientBlur, TweenInfo.new(0.4), {Size=0}):Play();
-
-															end
-
-															break;
-
-														end
-
-														if (FlatIdent_7C57C == 0) then
-
-															task.wait(0.4);
-
-															mainUI = coreGui:FindFirstChild("visualise");
-
-															FlatIdent_7C57C = 1;
-
-														end
-
-													end
-
-												until not blurEnabled 
-
-												ts:Create(clientBlur, TweenInfo.new(0.4), {Size=0}):Play();
-
-												break;
-
-											end
-
-										end
-
-									end
-
-									break;
-
-								end
-
-							end
-
-						end);
-
-						coroutine.resume(func);
-
-						break;
-
-					end
-
-				end
-
-			end});
-
-			ThemesCategory_ui.CreateSlider({name="Blur Size",side="right",max=56,min=0,value=24,callback=function(state)
-
-				blurSize = state;
-
-			end});
-
-			break;
-
-		end
-
-		if (2 == FlatIdent_2C7C4) then
-
-			clientBlur.Size = 24;
-
-			ThemesCategory_ui.CreateLabel({name="Client",side="right"});
-
-			FlatIdent_2C7C4 = 3;
-
-		end
-
-		if (1 == FlatIdent_2C7C4) then
-
-			clientBlur = Instance.new("BlurEffect", lighting);
-
-			clientBlur.Name = "ClientBlur";
-
-			FlatIdent_2C7C4 = 2;
-
-		end
-
-		if (FlatIdent_2C7C4 == 0) then
-
-			blurEnabled = false;
-
-			blurSize = 24;
-
-			FlatIdent_2C7C4 = 1;
-
-		end
-
-	end
-
-end);
-
-local function EmiteJC(pos)
-
-	local FlatIdent_74B46 = 0;
-
-	while true do
-
-		if (FlatIdent_74B46 == 0) then
-
-			JumpCircle.att.Position = pos;
-
-			JumpCircle.particle:Emit(1);
-
-			break;
-
-		end
-
-	end
-
-end
-
-if alive(lp) then
-
-	lp.Character.Humanoid.Jumping:Connect(function(state)
-
-		if (state and thingsEnabled.JumpCircleEnabled) then
-
-			EmiteJC(lp.Character.HumanoidRootPart.Position - Vector3.new(0, 3, 0));
-
-		end
-
-	end);
-
-end
-
-lp.CharacterAdded:Connect(function()
-
-	lp.Character:WaitForChild("Humanoid").Jumping:Connect(function(state)
-
-		if (state and thingsEnabled.JumpCircleEnabled) then
-
-			EmiteJC(lp.Character.HumanoidRootPart.Position - Vector3.new(0, 3, 0));
-
-		end
-
-	end);
-
-end);
-
-
-
-
-
-local ComingSoon = main.CreateTab({name="Functionality", icon = 474786337});
-
-
-
-local Ping = ComingSoon.CreateCategory({name = "Ping improvement."})
-
-
-
-Ping.CreateButton({name = "Low ping server", side = "left", callback = function()
-
-		--[[
-
-		WARNING: Heads up! This script has not been verified by ScriptBlox. Use at your own risk!
-
-	]]
-
-	local Lowest = "ping" -- set to "playing" to find the lowest player server
-
-
-
-	local HTTPService = game:GetService("HttpService")
-
-
-
-	local success, servers = pcall(function()
-
-		return HTTPService:JSONDecode(game:HttpGet(
-
-			"https://games.roblox.com/v1/games/" .. tostring(game.PlaceId) .. "/servers/Public?limit=100"
-
-			)).data
-
-	end)
-
-
-
-	if not success then return end
-
-
-
-	local server = servers[1]
-
-
-
-	for i,svr in pairs(servers) do
-
-		if svr[Lowest] < server[Lowest] then
-
-			server = svr
-
-		end
-
-	end
-
-
-
-	game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, server.id)
-
-end,})
-
-
-
-local Lag = ComingSoon.CreateCategory({name = "Lag improvement."})
-
-
-
-Lag.CreateButton({name = "Reduce Lag", side = "left", callback = function()
-
-	for _,v in pairs(workspace:GetDescendants()) do
-
-		if v.ClassName == "Part"
-
-			or v.ClassName == "SpawnLocation"
-
-			or v.ClassName == "WedgePart"
-
-			or v.ClassName == "Terrain"
-
-			or v.ClassName == "MeshPart" then
-
-			v.BrickColor = BrickColor.new(155, 155, 155)
-
-			v.Material = "Plastic"
-
-		end
-
-	end
-
-
-
-	for _,v in pairs(workspace:GetDescendants()) do
-
-		if v.ClassName == "Decal"
-
-			or v.ClassName == "Texture" then
-
-			v:Destroy()
-
-		end
-
-	end
-
-end,})
-
-
-
-local Developer = main.CreateTab({name="Developer", icon = 5072703341});
-
-
-
-local Owner = Developer.CreateCategory({name="Promise - Owner"});
-
-
-
-Owner.CreateButton({name = "Owner", side = "left", callback = function()
-
-	print("0001l0l")
-
-end,})
-
-
-
-Owner.CreateButton({name = "Discord SERVER", side = "left", callback = function()
-
-	print("https://discord.gg/3XKtSdEnph")
-
-end,})
-
-
-
-Owner.CreateButton({name = "Gmail", side = "left", callback = function()
-
-	print("promisecwsuppor@gmail.com")
-
-end,})
-
-
---Spam-parry
-
-
-local gui = Instance.new("ScreenGui")
-
-gui.ResetOnSpawn = false
-
-gui.Parent = game.CoreGui
-
-
-
-local frame = Instance.new("Frame")
-
-frame.Position = UDim2.new(0, 20, 0, 20)
-
-frame.Size = UDim2.new(0, 100, 0, 50)
-
-frame.BackgroundColor3 = Color3.new(0, 0, 0)
-
-frame.BorderSizePixel = 0
-
-frame.Parent = gui
-
-
-
-local button = Instance.new("TextButton")
-
-button.Text = "Activate"
-
-button.Size = UDim2.new(1, -10, 1, -10)
-
-button.Position = UDim2.new(0, 10, 0, 10)
-
-button.BackgroundColor3 = Color3.new(1, 1, 1)
-
-button.BorderColor3 = Color3.new(0, 0, 0)
-
-button.BorderSizePixel = 2
-
-button.Font = Enum.Font.SourceSans
-
-button.TextColor3 = Color3.new(0, 0, 0)
-
-button.TextSize = 16
-
-button.Parent = frame
-
-
-
-local activated = false
-
-
-
-local function toggle()
-
-	activated = not activated
-
-	button.Text = activated and "Desactivate" or "Activate"
-
-	while activated do
-
-		local args = {
-
-			[1] = 1.5,
-
-			[2] = CFrame.new(-254.2939910888672, 112.13581848144531, -119.27256774902344) * CFrame.Angles(-2.029526710510254, 0.5662040710449219, 2.314905881881714),
-
-			[3] = {
-
-				["2617721424"] = Vector3.new(-273.400146484375, -724.8031005859375, -20.92414093017578),
-
-			},
-
-			[4] = {
-
-				[1] = 910,
-
-				[2] = 154
-
-			}
-
-		}
-
-		game:GetService("ReplicatedStorage").Remotes.ParryAttempt:FireServer(unpack(args))
-
-		game:GetService("RunService").Heartbeat:Wait(0.000001)
-
-	end
-
-end
-
-
-
-button.MouseButton1Click:Connect(toggle)
-
-
-
--- Adicionar keybind "E" para ativar o botão
-
-local UserInputService = game:GetService("UserInputService")
-
-local eKeyPressed = false
-
-
-
-UserInputService.InputBegan:Connect(function(input, gameProcessedEvent)
-
-	if input.KeyCode == Enum.KeyCode.E and not gameProcessedEvent then
-
-		eKeyPressed = true
-
-		toggle()
-
-	end
-
+                    end
+                end
+                
+                if CanSlash then
+                    if math.random(1, 5) == 5 then
+                        game:GetService("VirtualInputManager"):SendMouseButtonEvent(0, 0, 0, true, game, 1)
+                    else
+                        game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode[KeyCodeBlock], false, game)
+                    end
+                    CanSlash = false
+                end
+            end)
+        end
+    end
 end)
 
-
-
-UserInputService.InputEnded:Connect(function(input, gameProcessedEvent)
-
-	if input.KeyCode == Enum.KeyCode.E then
-
-		eKeyPressed = false
-
-	end
-
+spawn(function()
+    while task.wait() do
+        if AutoWalk then
+            pcall(function()
+                if game.Players.LocalPlayer.Character.Parent.Name == "Dead" then return end
+				for i, v in pairs(game:GetService("Workspace").Balls:GetChildren()) do
+                    if v:IsA("Part") then
+						local part, speed = getSpeed(v)
+                        if part and speed then
+							if speed > 5 then
+                                if not game.Players.LocalPlayer.Character:FindFirstChild("Highlight") then
+                                    game.Players.LocalPlayer.Character.Humanoid:MoveTo(part.Position + Vector3.new(AutoWalkDistanceX, 0, AutoWalkDistanceZ))
+                                else
+                                    for i,v in pairs(game:GetService("Workspace").Alive:GetChildren()) do
+                                        if game.Players.LocalPlayer.Character.Parent.Name == "Alive" then
+                                            if  v ~= game.Players.LocalPlayer.Character then
+                                                game.Players.LocalPlayer.Character.Humanoid:MoveTo(v.HumanoidRootPart.Position + Vector3.new(AutoWalkDistanceX, 0, AutoWalkDistanceZ))
+                                            end
+                                        end
+                                    end
+                                end
+							end
+						end
+                    end
+                end
+            end)
+        end
+        if AutoDoubleJump then
+            pcall(function()
+                game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode.Space, false, game)
+            end)
+        end
+    end
 end)
 
+spawn(function()
+    while task.wait() do
+        if AutoRealWalk then
+            pcall(function()
+                if game.Players.LocalPlayer.Character.Parent.Name == "Dead" then return end
+				for i, v in pairs(game:GetService("Workspace").Balls:GetChildren()) do
+                    if v:IsA("Part") then
+						local part, speed = getSpeed(v)
+                        if part and speed then
+							if speed > 5 then
+                                if not game.Players.LocalPlayer.Character:FindFirstChild("Highlight") then
+                                    wait(math.random(1,5))
+                                    game.Players.LocalPlayer.Character.Humanoid:MoveTo(game.Players.LocalPlayer.Character.PrimaryPart.Position + Vector3.new(AutoWalkDistanceX+math.random(-50,50), 0, AutoWalkDistanceZ+math.random(-50,50)))
+                                else
+                                    game.Players.LocalPlayer.Character.Humanoid:MoveTo(part.Position + Vector3.new(AutoWalkDistanceX, 0, AutoWalkDistanceZ))
+                                end
+							end
+						end
+                    end
+                end
+            end)
+        end
+    end
+end)
 
+spawn(function()
+    while task.wait() do
+        if ClosestPlayer_var then
+            pcall(function()
+                if game.Players.LocalPlayer.Character.Parent.Name == "Dead" then return end
+                local OldCameraFrame = workspace.CurrentCamera.CFrame
+                local ClosestPlayer = GetClosestPlayer()
+                if ClosestPlayer then
+                    workspace.CurrentCamera.CFrame = CFrame.new(workspace.CurrentCamera.CFrame.Position, ClosestPlayer.Head.Position)
+                end
+            end)
+        end
+    end
+end)
 
-local NotificationHolder = loadstring(game:HttpGet("https://raw.githubusercontent.com/BocusLuke/UI/main/STX/Module.Lua"))()
+spawn(function()
+    while task.wait() do
+        if ballaim then
+            pcall(function()
+                if game.Players.LocalPlayer.Character.Parent.Name == "Dead" then return end
+                local OldCameraFrame = workspace.CurrentCamera.CFrame
+                for i, v in pairs(game:GetService("Workspace").Balls:GetChildren()) do
+                    if v:IsA("Part") then
+                        workspace.CurrentCamera.CFrame = CFrame.new(workspace.CurrentCamera.CFrame.Position, v.CFrame.Position)
+                    end
+                end
+            end)
+        end
+    end
+end)
 
-local Notification = loadstring(game:HttpGet("https://raw.githubusercontent.com/BocusLuke/UI/main/STX/Client.Lua"))()
-
-
-
-Notification:Notify(
-
-	{Title = "Spam-Parry-Close UI and Open UI", Description = "Spam-parry, press 'E' to activate or click. UI, press 'P' to open or close the UI."},
-
-	{OutlineColor = Color3.fromRGB(255, 19, 19), Time = 999999, Type = "option"},
-
-	{Image = "http://www.roblox.com/asset/?id=14478672223", ImageColor = Color3.fromRGB(255, 84, 84), Callback = function(State) print(tostring(State)) end}
-
-)
-
-		
+spawn(function()
+    while task.wait(math.random(1,2)) do
+        if RandomTeleports then
+            pcall(function()
+                if game.Players.LocalPlayer.Character.Parent.Name == "Dead" then return end
+                for i, v in pairs(game:GetService("Workspace").Balls:GetChildren()) do
+                    if v:IsA("Part") then
+						local part, speed = getSpeed(v)
+                        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = part.CFrame * CFrame.new(TeleportDistanceX, 0, TeleportDistancez)
+                    end
+                end
+            end)
+        end
+    end
+end)

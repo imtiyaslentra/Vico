@@ -3,17 +3,17 @@ local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 local VirtualInputManager = game:GetService("VirtualInputManager")
 local BallFolder = Workspace:WaitForChild("Balls")
-local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Orion/main/source"))() -- Mengambil Orion Library
+
+-- Mengambil Orion Library
+local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Orion/main/source"))()
 
 local player = Players.LocalPlayer
 local canParry = true
 local autospamEnabled = false
 local autoParryEnabled = false
-local playerInRange = false
 local ballSpeedThreshold = 10 -- Ambang kecepatan untuk AutoSpam
 local parryDistanceThreshold = 10 -- Jarak maksimum untuk parry
-local ballSpeedThresholdForParry = 0.5 -- Ambang kecepatan minimum untuk memicu parry
-local parryNotificationSent = false -- Untuk mencegah spam notifikasi
+local playerInRange = false
 
 -- Membuat GUI
 local Window = OrionLib:MakeWindow({Name = "Blade Ball Script", HidePremium = false, IntroText = "Blade Ball", OutroText = "Thank you for using!"})
@@ -38,8 +38,7 @@ local autoSpamToggle = Window:MakeToggle({
     end,
 })
 
--- Fungsi untuk menghitung waktu prediksi
-function calculatePredictionTime(ball)
+local function calculatePredictionTime(ball)
     local character = player.Character
     if character then
         local rootPart = character:FindFirstChild("HumanoidRootPart")
@@ -50,124 +49,71 @@ function calculatePredictionTime(ball)
             local distance = relativePosition.Magnitude
             local speed = relativeVelocity.Magnitude
 
-            if speed > 0 then      
+            if speed > 0 then
                 return distance / speed
             end
         end
     end
-    return math.huge 
+    return math.huge
 end
 
--- Fungsi untuk parry
-function parry()
+local function parry()
     if canParry then
         canParry = false
         VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
         VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
 
-        -- Notifikasi parry berhasil
-        if not parryNotificationSent then
-            parryNotificationSent = true
-            OrionLib:MakeNotification({
-                Name = "Parry Successful",
-                Content = "You have successfully parried!",
-                Time = 2, -- Durasi notifikasi
-            })
-            task.delay(2, function() parryNotificationSent = false end) -- Reset notifikasi setelah 2 detik
-        end
-        
         task.delay(0.1, function()
+            print("Parried successfully!")
             canParry = true
         end)
     end
 end
 
--- Fungsi untuk memeriksa kedekatan dengan pemain
-function checkProximityToPlayer(ball)
-    local character = player.Character
-    if character then
-        local rootPart = character:FindFirstChild("HumanoidRootPart")
-        if rootPart then
-            local distance = (ball.Position - rootPart.Position).Magnitude
-
-            -- Memastikan hanya melakukan parry jika bola berada dalam jarak dan bergerak
-            if distance <= parryDistanceThreshold and ball.Velocity.Magnitude > ballSpeedThresholdForParry and autoParryEnabled then
+local function checkProximityToPlayer(ball)
+    local predictionTime = calculatePredictionTime(ball)
+    local realBallAttribute = ball:GetAttribute("realBall")
+    local target = ball:GetAttribute("target")
+    
+    if predictionTime and realBallAttribute and target then
+        local distanceToBall = (ball.Position - player.Character.HumanoidRootPart.Position).Magnitude
+        if target == player.Name and distanceToBall <= parryDistanceThreshold then
+            local ballSpeedThreshold = math.max(0.4, 0.6 - ball.Velocity.Magnitude * 0.03)
+            if predictionTime <= ballSpeedThreshold then
                 parry()
             end
         end
     end
 end
 
--- Fungsi untuk mendeteksi kurva bola
-function detectCurve(ballPosition, previousPosition)
-    local curveDetected = false
-    -- Logika untuk mendeteksi kurva berdasarkan posisi bola
-    if math.abs(ballPosition.x - previousPosition.x) > 5 or math.abs(ballPosition.y - previousPosition.y) > 5 then
-        curveDetected = true
-    end
-    return curveDetected
-end
-
--- Fungsi untuk menghentikan AutoSpam jika bola berhenti
-function onBallStop(ballVelocity)
-    if ballVelocity == 0 then
-        autospamEnabled = false
-    end
-end
-
--- Fungsi untuk memeriksa kedekatan pemain
-function checkPlayerProximity(playerPosition, myPosition)
-    local distance = math.sqrt((playerPosition.x - myPosition.x)^2 + (playerPosition.y - myPosition.y)^2)
-    if distance < 5 then -- Jarak yang dibutuhkan untuk mendeteksi pemain
-        playerInRange = true
-    else
-        playerInRange = false
-    end
-end
-
--- Fungsi untuk memperbarui AutoSpam
-function updateAutospam(ballVelocity, ballPosition, previousPosition, playerPosition, myPosition)
-    if detectCurve(ballPosition, previousPosition) then
-        autospamEnabled = true
-    end
-
-    onBallStop(ballVelocity)
-
-    checkPlayerProximity(playerPosition, myPosition)
-
-    if playerInRange and ballVelocity > ballSpeedThreshold then
-        autospamEnabled = true
-    end
-end
-
--- Fungsi untuk melakukan spam
-local function performAutospam()
-    if autospamEnabled then
-        VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0) -- Mulai spam
-        VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0) -- Hentikan spam
-    end
-end
-
--- Mengupdate posisi bola dan mengawasi setiap frame
 RunService.Heartbeat:Connect(function()
-    for _, ball in pairs(BallFolder:GetChildren()) do
-        if ball:IsA("Part") and ball:GetAttribute("realBall") then
-            local ballVelocity = ball.Velocity.Magnitude
-            local ballPosition = ball.Position
-            local previousPosition = ball:GetAttribute("previousPosition") or ballPosition -- Simpan posisi sebelumnya
-            local myPosition = player.Character and player.Character:FindFirstChild("HumanoidRootPart").Position or Vector3.new()
-
-            -- Update AutoSpam
-            updateAutospam(ballVelocity, ballPosition, previousPosition, player.Position, myPosition)
-
-            -- Perbarui posisi sebelumnya setelah pemeriksaan
-            ball:SetAttribute("previousPosition", ballPosition)
-
-            -- Lakukan spam jika diaktifkan
-            performAutospam()
-
-            -- Cek parry
+    if autoParryEnabled then
+        for _, ball in ipairs(BallFolder:GetChildren()) do
             checkProximityToPlayer(ball)
+        end
+    end
+
+    -- Cek status AutoSpam
+    if autospamEnabled then
+        -- Implementasikan logika AutoSpam di sini jika diperlukan
+    end
+end)
+
+-- Mengatur jarak untuk mendeteksi kedekatan pemain
+RunService.Heartbeat:Connect(function()
+    local character = player.Character
+    if character and character:FindFirstChild("HumanoidRootPart") then
+        for _, ball in ipairs(BallFolder:GetChildren()) do
+            if ball:IsA("Ball") then
+                local ballPosition = ball.Position
+                local playerPosition = character.HumanoidRootPart.Position
+                local distance = (ballPosition - playerPosition).Magnitude
+                playerInRange = distance < parryDistanceThreshold
+
+                if not playerInRange then
+                    canParry = true -- Nonaktifkan parry jika tidak dalam jangkauan
+                end
+            end
         end
     end
 end)

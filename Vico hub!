@@ -1,24 +1,25 @@
+
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 local VirtualInputManager = game:GetService("VirtualInputManager")
 local BallFolder = Workspace:WaitForChild("Balls")
 
--- Mengambil Orion Library
+-- Load Orion Library
 local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Orion/main/source"))()
 
 local player = Players.LocalPlayer
 local canParry = true
 local autospamEnabled = false
 local autoParryEnabled = false
-local ballSpeedThreshold = 10 -- Ambang kecepatan untuk AutoSpam
-local parryDistanceThreshold = 10 -- Jarak maksimum untuk parry
+local ballSpeedThreshold = 10 -- Speed threshold for AutoSpam
+local parryDistanceThreshold = 10 -- Maximum distance for parry
 local playerInRange = false
 
--- Membuat GUI
+-- Create GUI
 local Window = OrionLib:MakeWindow({Name = "Blade Ball Script", HidePremium = false, IntroText = "Blade Ball", OutroText = "Thank you for using!"})
 
--- Toggle untuk AutoParry
+-- Toggle for AutoParry
 local autoParryToggle = Window:MakeToggle({
     Name = "Enable AutoParry",
     Default = false,
@@ -28,7 +29,7 @@ local autoParryToggle = Window:MakeToggle({
     end,
 })
 
--- Toggle untuk AutoSpam
+-- Toggle for AutoSpam
 local autoSpamToggle = Window:MakeToggle({
     Name = "Enable AutoSpam",
     Default = false,
@@ -71,7 +72,12 @@ local function parry()
 end
 
 local function checkProximityToPlayer(ball)
-    local predictionTime = calculatePredictionTime(ball)
+    local success, predictionTime = pcall(calculatePredictionTime, ball)
+    if not success then
+        warn("Error calculating prediction time: " .. tostring(predictionTime))
+        return
+    end
+
     local realBallAttribute = ball:GetAttribute("realBall")
     local target = ball:GetAttribute("target")
     
@@ -89,17 +95,19 @@ end
 RunService.Heartbeat:Connect(function()
     if autoParryEnabled then
         for _, ball in ipairs(BallFolder:GetChildren()) do
-            checkProximityToPlayer(ball)
+            if ball:IsA("Ball") then
+                checkProximityToPlayer(ball)
+            end
         end
     end
 
-    -- Cek status AutoSpam
+    -- Check AutoSpam status
     if autospamEnabled then
-        -- Implementasikan logika AutoSpam di sini jika diperlukan
+        -- Implement AutoSpam logic here if needed
     end
 end)
 
--- Mengatur jarak untuk mendeteksi kedekatan pemain
+-- Set distance for detecting player proximity
 RunService.Heartbeat:Connect(function()
     local character = player.Character
     if character and character:FindFirstChild("HumanoidRootPart") then
@@ -111,12 +119,12 @@ RunService.Heartbeat:Connect(function()
                 playerInRange = distance < parryDistanceThreshold
 
                 if not playerInRange then
-                    canParry = true -- Nonaktifkan parry jika tidak dalam jangkauan
+                    canParry = true -- Disable parry if out of range
                 end
             end
         end
     end
 end)
 
--- Menampilkan GUI
+-- Initialize GUI
 OrionLib:Init()

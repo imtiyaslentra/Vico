@@ -1,125 +1,109 @@
+-- Load Orion Library
+local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Orion/main/source"))()
+local Window = OrionLib:MakeWindow({Name = "Autoparry System", HidePremium = false})
 
+-- Main Tab
+local MainTab = Window:MakeTab({
+    Name = "Main",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+-- Toggle Autoparry Checkbox
+local AutoparryEnabled = false
+MainTab:AddToggle({
+    Name = "Enable Autoparry",
+    Default = false,
+    Callback = function(Value)
+        AutoparryEnabled = Value
+        if AutoparryEnabled then
+            print("Autoparry is now enabled.")
+        else
+            print("Autoparry is now disabled.")
+        end
+    end
+})
+
+-- Services
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 local VirtualInputManager = game:GetService("VirtualInputManager")
 local BallFolder = Workspace:WaitForChild("Balls")
-local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Orion/main/source"))()
 
-local player = Players.LocalPlayer
+-- Global Variables
 local canParry = true
-local autoParryEnabled = false
-local Titan_blade = false
-local Predict_parry = true
-local Parry_mode = "pro hard"
+local canSpam = true
+local Titan_blade = Players.LocalPlayer:WaitForChild("Backpack"):WaitForChild("TitanBlade")
+local predict_parry = false
+local Parry_mode = false
 
--- Creating UI with Orion
-local Window = OrionLib:MakeWindow({
-    Name = "Blade Ball AutoParry",
-    HidePremium = false,
-    IntroText = "Blade Ball AutoParry"
-})
-
--- Adding Tab for AutoParry
-local Tab = Window:MakeTab({
-    Name = "AutoParry",
-    Icon = "rbxassetid://4483345998",
-    PremiumOnly = false
-})
-
--- Adding Toggle for AutoParry
-Tab:AddToggle({
-    Name = "Toggle AutoParry",
-    Default = false,
-    Callback = function(Value)
-        autoParryEnabled = Value
-        if autoParryEnabled then
-            OrionLib:MakeNotification({
-                Name = "AutoParry Activated",
-                Content = "AutoParry is now enabled.",
-                Image = "rbxassetid://4483345998",
-                Time = 5
-            })
-        else
-            OrionLib:MakeNotification({
-                Name = "AutoParry Deactivated",
-                Content = "AutoParry is now disabled.",
-                Image = "rbxassetid://4483345998",
-                Time = 5
-            })
-        end
-    end
-})
-
+-- Calculate Prediction Time Function
 local function calculatePredictionTime(ball)
-    local character = player.Character
-    if character then
-        local rootPart = character:FindFirstChild("HumanoidRootPart")
-        if rootPart then
-            local relativePosition = ball.Position - rootPart.Position
-            local relativeVelocity = ball.Velocity
+    local playerPosition = Players.LocalPlayer.Character.HumanoidRootPart.Position
+    local ballPosition = ball.Position
+    local ballVelocity = ball.Velocity
+    local distance = (ballPosition - playerPosition).magnitude
+    local speed = ballVelocity.magnitude
 
-            local distance = relativePosition.Magnitude
-            local speed = relativeVelocity.Magnitude
-
-            if speed > 0 then      
-                return distance / speed
-            end
-        end
+    if speed > 0 then
+        return distance / speed
+    else
+        return math.huge
     end
-    return math.huge 
 end
 
+-- Parry Function
 local function parry()
     if canParry then
         canParry = false
-        VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
-        VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
-
-        OrionLib:MakeNotification({
-            Name = "Parry Successful!",
-            Content = "Parried the ball successfully!",
-            Image = "rbxassetid://4483345998",
-            Time = 5
-        })
-
-        task.delay(0.1, function()
-            canParry = true
-        end)
+        VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.E, false, game)
+        wait(0.1) -- Simulate the parry action
+        VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.E, false, game)
+        wait(10) -- Cooldown period
+        canParry = true
     end
 end
 
+-- Check Proximity to Player Function
 local function checkProximityToPlayer(ball)
-    local success, predictionTime = pcall(calculatePredictionTime, ball)
-    if not success then
-        warn("Error calculating prediction time: " .. tostring(predictionTime))
-        return
-    end
+    local predictionTime = calculatePredictionTime(ball)
+    local ballAttributes = ball:GetAttributes()
+    local target = ballAttributes.Target
 
-    local realBallAttribute = ball:GetAttribute("realBall")
-    local target = ball:GetAttribute("target")
-
-    if predictionTime and realBallAttribute and target then
-        if target == player.Name then
-            local ballSpeed = ball.Velocity.Magnitude
-            local ballSpeedThreshold = math.max(0.4, 0.6 - ballSpeed * 0.03)
-            
-            if predictionTime <= ballSpeedThreshold and ballSpeed > 0.5 then
-                if autoParryEnabled then
-                    parry()
-                end
-            end
-        end
+    if target == Players.LocalPlayer and predictionTime < 1.5 then
+        parry()
     end
 end
 
+-- Event Listener
 RunService.Heartbeat:Connect(function()
-    for _, ball in pairs(BallFolder:GetChildren()) do
-        if ball:IsA("Part") and ball:GetAttribute("realBall") then
-            checkProximityToPlayer(ball)
+    if AutoparryEnabled then
+        for _, ball in pairs(BallFolder:GetChildren()) do
+            if ball:IsA("Ball") then
+                checkProximityToPlayer(ball)
+            end
         end
     end
 end)
 
--- Displaying UI
-OrionLib:Init()
+-- Additional Functionality: Visual Feedback
+local function provideVisualFeedback()
+    for _, ball in pairs(BallFolder:GetChildren()) do
+        if ball:IsA("Ball") then
+            local ballPosition = ball.Position
+            -- Create a visual indicator for the player
+            local indicator = Instance.new("Part")
+            indicator.Size = Vector3.new(1, 1, 1)
+            indicator.Position = ballPosition + Vector3.new(0, 5, 0)
+            indicator.Anchored = true
+            indicator.BrickColor = BrickColor.new("Bright red")
+            indicator.Parent = Workspace
+            wait(1) -- Show the indicator for 1 second
+            indicator:Destroy()
+        end
+    end
+end
+
+-- Connect visual feedback to the heartbeat
+RunService.Heartbeat:Connect(provideVisualFeedback)

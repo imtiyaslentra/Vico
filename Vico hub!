@@ -75,7 +75,7 @@ local function parry()
         canParry = false
         VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
         VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
-        
+
         OrionLib:MakeNotification({
             Name = "Parry Successful!",
             Content = "Parried the ball successfully!",
@@ -101,9 +101,10 @@ local function checkProximityToPlayer(ball)
 
     if predictionTime and realBallAttribute and target then
         if target == player.Name then
-            local ballSpeedThreshold = math.max(0.4, 0.6 - ball.Velocity.Magnitude * 0.03)
-
-            if predictionTime <= ballSpeedThreshold then
+            local ballSpeed = ball.Velocity.Magnitude
+            local ballSpeedThreshold = math.max(0.4, 0.6 - ballSpeed * 0.03)
+            
+            if predictionTime <= ballSpeedThreshold and ballSpeed > 0.5 then
                 if autoParryEnabled then
                     parry()
                 end
@@ -114,7 +115,7 @@ end
 
 RunService.Heartbeat:Connect(function()
     for _, ball in pairs(BallFolder:GetChildren()) do
-        if ball:IsA("Part") then
+        if ball:IsA("Part") and ball:GetAttribute("realBall") then
             checkProximityToPlayer(ball)
         end
     end

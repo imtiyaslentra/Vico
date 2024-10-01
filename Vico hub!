@@ -8,6 +8,7 @@ local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/shle
 local player = Players.LocalPlayer
 local canParry = true
 local autospamEnabled = false
+local autoParryEnabled = false
 local playerInRange = false
 local ballSpeedThreshold = 10 -- Ambang kecepatan untuk AutoSpam
 local parryDistanceThreshold = 10 -- Jarak maksimum untuk parry
@@ -18,11 +19,20 @@ local parryNotificationSent = false -- Untuk mencegah spam notifikasi
 local Window = OrionLib:MakeWindow({Name = "Blade Ball Script", HidePremium = false, IntroText = "Blade Ball", OutroText = "Thank you for using!"})
 
 -- Toggle untuk AutoParry
-local AutoParryToggle = Window:MakeToggle({
+Window:MakeToggle({
     Name = "Enable AutoParry",
     Default = false,
     Callback = function(value)
         autoParryEnabled = value
+    end,
+})
+
+-- Toggle untuk AutoSpam
+Window:MakeToggle({
+    Name = "Enable AutoSpam",
+    Default = false,
+    Callback = function(value)
+        autospamEnabled = value
     end,
 })
 

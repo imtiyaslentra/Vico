@@ -19,20 +19,22 @@ local parryNotificationSent = false -- Untuk mencegah spam notifikasi
 local Window = OrionLib:MakeWindow({Name = "Blade Ball Script", HidePremium = false, IntroText = "Blade Ball", OutroText = "Thank you for using!"})
 
 -- Toggle untuk AutoParry
-Window:MakeToggle({
+local autoParryToggle = Window:MakeToggle({
     Name = "Enable AutoParry",
     Default = false,
     Callback = function(value)
         autoParryEnabled = value
+        print("AutoParry Enabled: " .. tostring(value)) -- Debug log
     end,
 })
 
 -- Toggle untuk AutoSpam
-Window:MakeToggle({
+local autoSpamToggle = Window:MakeToggle({
     Name = "Enable AutoSpam",
     Default = false,
     Callback = function(value)
         autospamEnabled = value
+        print("AutoSpam Enabled: " .. tostring(value)) -- Debug log
     end,
 })
 
@@ -169,3 +171,6 @@ RunService.Heartbeat:Connect(function()
         end
     end
 end)
+
+-- Menampilkan GUI
+OrionLib:Init()

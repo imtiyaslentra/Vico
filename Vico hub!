@@ -1,115 +1,292 @@
--- Mengimpor Orion Library
 local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
 
--- Membuat Window GUI
-local Window = OrionLib:MakeWindow({Name = "Blade Ball AutoParry", HidePremium = false, SaveConfig = true, ConfigFolder = "BladeBallConfig"})
+-- Membuat window utama
+local Window = OrionLib:MakeWindow({
+    Name = "Vico Hub",
+    HidePremium = false,
+    SaveConfig = true,
+    ConfigFolder = "OrionTest",
+})
 
--- Variabel Toggle
-local AutoParryEnabled = false
-
--- Fungsi untuk Toggle AutoParry
-local function AutoParryToggle(enabled)
-    AutoParryEnabled = enabled
-    if enabled then
-        OrionLib:MakeNotification({
-            Name = "AutoParry Activated",
-            Content = "AutoParry is now enabled!",
-            Image = "rbxassetid://4483345998", -- icon notification
-            Time = 5
-        })
-    else
-        OrionLib:MakeNotification({
-            Name = "AutoParry Deactivated",
-            Content = "AutoParry is now disabled!",
-            Image = "rbxassetid://4483345998", -- icon notification
-            Time = 5
-        })
-    end
+-- Memanggil Init pada objek Window
+if Window and type(Window.Init) == "function" then
+    Window:Init()
+else
+    warn("Window Init function is missing!")
 end
 
--- Membuat Tab untuk AutoParry
+-- Notifikasi ketika GUI di-load
+OrionLib:MakeNotification({
+    Name = "Execution Started",
+    Content = "GUI successfully loaded!",
+    Image = nil,
+    Time = 5
+})
+
+-- Tab utama
 local Tab = Window:MakeTab({
-    Name = "AutoParry",
-    Icon = "rbxassetid://4483345998",
+    Name = "Main",
+    Icon = "rbxassetid://4483362458",
     PremiumOnly = false
 })
 
--- Membuat Toggle untuk AutoParry
-Tab:AddToggle({
-    Name = "Enable AutoParry",
-    Default = false,
-    Callback = function(value)
-        AutoParryToggle(value)
+-- SERVICES
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local workspace = game:GetService("Workspace")
+local players = game:GetService("Players")
+local runService = game:GetService("RunService")
+local vim = game:GetService("VirtualInputManager")
+
+local ballFolder = workspace.Balls
+local indicatorPart = Instance.new("Part")
+indicatorPart.Size = Vector3.new(5, 5, 5)
+indicatorPart.Anchored = true
+indicatorPart.CanCollide = false
+indicatorPart.Transparency = 1
+indicatorPart.BrickColor = BrickColor.new("Bright red")
+indicatorPart.Parent = workspace
+
+local lastBallPressed = nil
+local isKeyPressed = false
+local autoParryActive = false -- Status untuk toggle Auto Parry
+local autoSpamActive = false -- Status untuk toggle Auto Spam
+
+-- Fungsi untuk menghitung waktu prediksi hingga tabrakan
+local function calculatePredictionTime(ball, player)
+    -- Pastikan bola dan pemain valid
+    if not ball or not ball:IsA("BasePart") then
+        warn("Invalid ball provided.")
+        return math.huge  -- Kembalikan nilai tidak terbatas jika bola tidak valid
     end
-})
-
--- Kode AutoParry yang telah kamu berikan
-local RunService = game:GetService("RunService")
-local Players = game:GetService("Players")
-local Workspace = game:GetService("Workspace")
-local VirtualInputManager = game:GetService("VirtualInputManager")
-local BallFolder = Workspace:WaitForChild("Balls")
-
-local player = Players.LocalPlayer
-local canParry = true
-
-local function calculatePredictionTime(ball)
-    local character = player.Character
-    if character then
-        local rootPart = character:FindFirstChild("HumanoidRootPart")
-        if rootPart then
-            local relativePosition = ball.Position - rootPart.Position
-            local relativeVelocity = ball.Velocity
-
-            local distance = relativePosition.Magnitude
-            local speed = relativeVelocity.Magnitude
-
-            if speed > 0 then      
-                return distance / speed
-            end
-        end
-    end
-    return math.huge 
-end
-
-local function parry()
-    if canParry then
-        canParry = false
-        VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
-        VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
+    
+    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+        local rootPart = player.Character.HumanoidRootPart
+        local relativePosition = ball.Position - rootPart.Position
+        local velocity = ball.Velocity + (player.Character:FindFirstChildOfClass("Humanoid") and player.Character.Humanoid.RootPart.Velocity or Vector3.new(0, 0, 0))
         
-        task.delay(0.1, function()
-            print("Parried by using calculation.")
-            canParry = true
-        end)
+        local a = (ball.Size.magnitude / 2)  -- Jari-jari bola
+        local b = relativePosition.magnitude  -- Jarak dari pemain ke bola
+        local c = math.sqrt(a * a + b * b)  -- Menghitung jarak diagonal
+        
+        -- Pastikan kecepatan tidak nol untuk menghindari pembagian dengan nol
+        if velocity.magnitude > 0 then
+            local timeToCollision = (c - a) / velocity.magnitude  -- Menghitung waktu tabrakan
+            return timeToCollision
+        else
+            warn("Velocity is zero, unable to calculate time to collision.")
+            return math.huge  -- Kembalikan nilai tidak terbatas jika kecepatan nol
+        end
+    else
+        warn("Player character is not valid.")
+    end
+    
+    return math.huge  -- Kembalikan nilai tidak terbatas jika kondisi tidak terpenuhi
+end
+
+-- Pastikan indicatorPart sudah didefinisikan sebelumnya
+local indicatorPart = Instance.new("Part")
+indicatorPart.Size = Vector3.new(1, 1, 1)
+indicatorPart.Color = Color3.fromRGB(255, 0, 0) -- Merah
+indicatorPart.Anchored = true
+indicatorPart.Parent = workspace -- Menempatkan di workspace
+
+local function updateIndicatorPosition(ball)
+    if ball and ball:IsA("BasePart") then  -- Memastikan bahwa ball adalah BasePart
+        indicatorPart.Position = ball.Position + Vector3.new(0, 2, 0) -- Posisi sedikit di atas bola
+    else
+        warn("Invalid ball or ball is not a BasePart!")
     end
 end
 
-local function checkProximityToPlayer(ball)
-    if not AutoParryEnabled then return end -- Memeriksa apakah AutoParry diaktifkan
+-- Fungsi untuk memeriksa kedekatan bola dengan pemain
+local function checkProximityToPlayer(ball, player)
+    if not autoParryActive then return end -- Hentikan fungsi jika Auto Parry tidak aktif
 
-    local predictionTime = calculatePredictionTime(ball)
+    local predictionTime = calculatePredictionTime(ball, player)
     local realBallAttribute = ball:GetAttribute("realBall")
     local target = ball:GetAttribute("target")
 
-    if predictionTime and realBallAttribute and target then
-        if target == player.Name then
-            local ballSpeedThreshold = math.max(0.4, 0.6 - ball.Velocity.Magnitude * 0.03)
+    -- Menghitung threshold kecepatan bola
+    local ballSpeedThreshold = math.max(0.31, 0.5 - ball.Velocity.magnitude * 0.01)
 
-            if predictionTime <= ballSpeedThreshold then
-                parry()
+    -- Logika untuk eksekusi parry
+    if predictionTime <= ballSpeedThreshold and realBallAttribute == true and target == player.Name and not isKeyPressed then
+        -- Eksekusi parry
+        vim:SendKeyEvent(true, Enum.KeyCode.F, false, nil) -- Menekan tombol F
+        wait(0.005) -- Tunggu sebentar
+        vim:SendKeyEvent(false, Enum.KeyCode.F, false, nil) -- Melepaskan tombol F
+        lastBallPressed = ball
+        isKeyPressed = true
+        OrionLib:MakeNotification({
+            Name = "Parry Executed",
+            Content = "Successfully executed parry!",
+            Image = nil,
+            Time = 3
+        })
+    elseif lastBallPressed == ball and (predictionTime > ballSpeedThreshold or realBallAttribute ~= true or target ~= player.Name) then
+        -- Reset isKeyPressed jika kondisi tidak lagi terpenuhi
+        isKeyPressed = false
+    end
+end
+
+-- Fungsi untuk memeriksa kedekatan bola
+local function checkBallsProximity()
+    local player = players.LocalPlayer
+    if not player then
+        warn("Local player not found! Ensure this script is running on the client.")
+        return
+    end
+
+    -- Menghitung jarak antara pemain dan bola
+    for _, ball in pairs(ballFolder:GetChildren()) do
+        if ball:IsA("Part") then
+            local ballPosition = ball.Position
+            
+            -- Menggunakan posisi pemain untuk pemeriksaan jarak
+            local humanoidRootPart = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+            if not humanoidRootPart then
+                warn("Player's HumanoidRootPart not found!")
+                return
+            end
+            
+            local playerPosition = humanoidRootPart.Position
+            local distance = (playerPosition - ballPosition).magnitude
+            
+            -- Di sini, tambahkan logika untuk memeriksa jarak dan melakukan tindakan yang diperlukan
+            if distance < 10 then -- Ganti 10 dengan jarak yang sesuai
+                -- Logika jika jarak bola cukup dekat
+                print("Ball is within proximity!")
             end
         end
     end
 end
 
-RunService.Heartbeat:Connect(function()
-    if AutoParryEnabled then
-        for _, ball in ipairs(BallFolder:GetChildren()) do
-            checkProximityToPlayer(ball)
+runService.Heartbeat:Connect(checkBallsProximity)
+
+-- Mendapatkan posisi pemain
+local function getPlayerPosition()
+    local player = players.LocalPlayer
+    if not player then
+        warn("Local player not found!")
+        return nil
+    end
+
+    local character = player.Character
+    if not character then
+        warn("Player character not found!")
+        return nil
+    end
+
+    local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+    if not humanoidRootPart then
+        warn("Player's HumanoidRootPart not found for player: " .. player.Name)
+        return nil
+    end
+
+    return humanoidRootPart.Position
+end
+
+-- Fungsi untuk memeriksa kedekatan pemain lain dengan pemain lokal
+local function checkPlayerProximityToPlayer()
+    local player = players.LocalPlayer
+    if not player or not player.Character then
+        warn("Local player not found!")
+        return
+    end
+
+    local humanoidRootPart = player.Character:FindFirstChild("HumanoidRootPart")
+    if not humanoidRootPart then
+        warn("Player's HumanoidRootPart not found!")
+        return
+    end
+
+    for _, otherPlayer in pairs(players:GetPlayers()) do
+        if otherPlayer ~= player and otherPlayer.Character then
+            local otherRootPart = otherPlayer.Character:FindFirstChild("HumanoidRootPart")
+            if otherRootPart then
+                local distance = (humanoidRootPart.Position - otherRootPart.Position).Magnitude
+                if distance < 10 then -- Ubah angka ini untuk threshold jarak yang diinginkan
+                    -- Jika pemain lain dalam jarak dekat, aktifkan spam parry
+                    if not isKeyPressed then
+                        vim:SendKeyEvent(true, Enum.KeyCode.F, false, nil) -- Menekan tombol F
+                        wait(0.1) -- Tunggu sebentar sebelum spam berikutnya
+                        vim:SendKeyEvent(false, Enum.KeyCode.F, false, nil) -- Melepaskan tombol F
+                        isKeyPressed = true
+                        OrionLib:MakeNotification({
+                            Name = "AutoSpam Executed",
+                            Content = "Parry spam executed due to proximity to another player.",
+                            Image = nil,
+                            Time = 3
+                        })
+                    end
+                else
+                    isKeyPressed = false
+                end
+            end
         end
     end
-end)
+end
 
--- Menampilkan GUI
+-- Callback untuk Toggle AutoParry
+Tab:AddToggle({
+    Name = "Auto Parry",
+    Default = false,
+    Callback = function(value)
+        autoParryActive = value
+        OrionLib:MakeNotification({
+            Name = "AutoParry Status",
+            Content = autoParryActive and "AutoParry is now ON" or "AutoParry is now OFF",
+            Image = nil,
+            Time = 3
+        })
+    end
+})
+
+-- Callback untuk Toggle AutoSpam
+Tab:AddToggle({
+    Name = "Auto Spam Parry",
+    Default = false,
+    Callback = function(value)
+        autoSpamActive = value
+        OrionLib:MakeNotification({
+            Name = "AutoSpam Status",
+            Content = autoSpamActive and "AutoSpam is now ON" or "AutoSpam is now OFF",
+            Image = nil,
+            Time = 3
+        })
+    end
+})
+
+-- Fungsi untuk menjalankan logika AutoSpam dan AutoParry
+local function autoParryAndSpamLogic()
+    local player = players.LocalPlayer
+
+    -- Logika AutoSpam
+    if autoSpamActive then
+        checkPlayerProximityToPlayer() -- Mengecek kedekatan pemain lain untuk AutoSpam
+    end
+
+    -- Logika AutoParry
+    if autoParryActive then
+        for _, ball in pairs(ballFolder:GetChildren()) do
+            if ball:IsA("BasePart") then
+                checkProximityToPlayer(ball, player) -- Mengecek kedekatan bola untuk AutoParry
+                updateIndicatorPosition(ball) -- Mengupdate posisi indikator
+            end
+        end
+    end
+end
+
+-- Menghubungkan logika ke Heartbeat untuk memeriksa kondisi secara berkala
+runService.Heartbeat:Connect(autoParryAndSpamLogic)
+
+-- Menutup GUI jika ditekan tombol tutup
+Tab:AddButton({
+    Name = "Close GUI",
+    Callback = function()
+        OrionLib:Destroy()
+    end
+})
+
+-- Menginisialisasi GUI
 OrionLib:Init()

@@ -1,64 +1,34 @@
-local UILib = loadstring(game:HttpGet('https://raw.githubusercontent.com/StepBroFurious/Script/main/HydraHubUi.lua'))()
-local Window = UILib.new("Grand Piece Online", game.Players.LocalPlayer.UserId, "Buyer")
-local Category1 = Window:Category("Main", "http://www.roblox.com/asset/?id=8395621517")
-local SubButton1 = Category1:Button("Combat", "http://www.roblox.com/asset/?id=8395747586")
-local Section1 = SubButton1:Section("Section", "Left")
+-- Load ImGUI Library
+local ImGui = loadstring(game:HttpGet("https://raw.githubusercontent.com/depthso/Roblox-ImGUI/main/lib.lua"))()
 
--- Auto Parry Toggle
-Section1:Toggle({
-    Title = "Auto Parry",
-    Description = "Enable/Disable Auto Parry",
-    Default = false
-    }, function(value)
-    -- Integrate with Auto Parry Function
+-- Create a new window
+local window = ImGui.new("Auto Parry Control", Vector2.new(300, 400))
+
+-- Main Menu
+local tab = window:addTab("Main Settings")
+
+-- Add Auto Parry Toggle
+tab:addCheckbox("Enable Auto Parry", function(value)
     getgenv().AutoParryEnabled = value
     print("Auto Parry is now set to:", value)
+end, false) -- Default set to false
+
+-- Add Walkspeed Slider
+tab:addSlider("Walkspeed", 0, 120, 16, function(value)
+    print("Walkspeed set to:", value)
 end)
 
--- Other GUI elements can remain as they are
-Section1:Button({
-    Title = "Kill All",
-    ButtonName = "KILL!!",
-    Description = "kills everyone",
-    }, function(value)
-    print(value)
+-- Add Damage Multiplier Textbox
+tab:addTextbox("Damage Multiplier", function(value)
+    print("Damage Multiplier set to:", value)
 end)
 
-Section1:Slider({
-    Title = "Walkspeed",
-    Description = "",
-    Default = 16,
-    Min = 0,
-    Max = 120
-    }, function(value)
-    print(value)
+-- Add Kill All Button
+tab:addButton("Kill All", function()
+    print("Killing all!")
 end)
 
-Section1:ColorPicker({
-    Title = "Colorpicker",
-    Description = "",
-    Default = Color3.new(255,0,0),
-    }, function(value)
-    print(value)
-end)
-
-Section1:Textbox({
-    Title = "Damage Multiplier",
-    Description = "",
-    Default = "",
-    }, function(value)
-    print(value)
-end)
-
-Section1:Keybind({
-    Title = "Kill All",
-    Description = "",
-    Default = Enum.KeyCode.Q,
-    }, function(value)
-    print(value)
-end)
-
--- Auto Parry Logic (Fungsi ini tetap tidak berubah)
+-- Auto Parry Logic (No Changes to Function)
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
@@ -78,7 +48,7 @@ local function calculatePredictionTime(ball)
             local distance = relativePosition.Magnitude
             local speed = relativeVelocity.Magnitude
 
-            if speed > 0 then      
+            if speed > 0 then
                 return distance / speed
             end
         end
@@ -120,3 +90,6 @@ RunService.Heartbeat:Connect(function()
         checkProximityToPlayer(ball)
     end
 end)
+
+-- Show GUI
+window:show()

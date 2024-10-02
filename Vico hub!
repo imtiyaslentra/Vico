@@ -2,7 +2,7 @@ local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 local VirtualInputManager = game:GetService("VirtualInputManager")
-local BallFolder = Workspace:WaitForChild("Balls") -- Pastikan ini adalah folder yang benar
+local BallFolder = Workspace:WaitForChild("Balls") -- Mengambil folder bola dari workspace
 
 local player = Players.LocalPlayer
 local canParry = true
@@ -54,7 +54,7 @@ local function parry()
         VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
 
         task.delay(0.1, function()
-            print("parried by using calculator at https://frostware.raw/calculate_bladeball.com")
+            print("Parried by using calculator at https://frostware.raw/calculate_bladeball.com")
             canParry = true
         end)
     end

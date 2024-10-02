@@ -1,68 +1,57 @@
-local Clock = os.clock()
+-- Credits To The Original Devs @xz, @goof 
+getgenv().Config = {
+    Invite = "informant.wtf",
+    Version = "Intergrated",
+}
 
-local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/drillygzzly/Roblox-UI-Libs/main/1%20Tokyo%20Lib%20(FIXED)/Tokyo%20Lib%20Source.lua"))({
-    cheatname = "VicoHub", -- watermark text
-    gamename = "BladeBall", -- watermark text
+getgenv().luaguardvars = {
+    DiscordName = "username#0000",
+}
+
+local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/drillygzzly/Other/main/1"))()
+
+library:init() -- Initalizes Library Do Not Delete This
+
+local Window = library.NewWindow({
+    title = "Informant.Wtf",
+    size = UDim2.new(0, 525, 0, 650)
 })
 
-library:init()
+local tabs = {
+    Tab1 = Window:AddTab("Tab1"),
+    Settings = library:CreateSettingsTab(Window),
+}
 
-local Window1  = library.NewWindow({
-    title = "VicoHub | Noob", -- Mainwindow Text
-    size = UDim2.new(0, 510, 0.6, 6)
-})
+local sections = {
+    Section1 = tabs.Tab1:AddSection("Section1", 1),
+    Section2 = tabs.Tab1:AddSection("Section2", 2),
+}
 
-local Main = Window1:AddTab("  Main  ")
-local SettingsTab = library:CreateSettingsTab(Window1)
-
-local Section1 = Main:AddSection("Section 1", 1)
-
--- Simpan status Auto Parry
-local autoParryEnabled = false
-
--- Toggle Auto Parry
-Section1:AddToggle({
+-- Auto Parry Toggle
+sections.Section1:AddToggle({
+    enabled = false,
     text = "Auto Parry",
-    state = false,
-    risky = true,
-    tooltip = "tooltip1",
-    flag = "Toggle_1",
-    risky = false,
-    callback = function(v)
-        autoParryEnabled = v
-        print(ValueText, v)
+    flag = "Toggle_Parry",
+    tooltip = "Enable or Disable Auto Parry",
+    risky = true, -- turns text to red and sets label to risky
+    callback = function(state)
+        if state then
+            print("Auto Parry Enabled")
+        else
+            print("Auto Parry Disabled")
+        end
+        getgenv().AutoParryEnabled = state
     end
 })
 
+-- The original Auto Parry function
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 local VirtualInputManager = game:GetService("VirtualInputManager")
 local BallFolder = Workspace:WaitForChild("Balls")
-
 local player = Players.LocalPlayer
 local canParry = true
-local canSpam = false
-local Titan_blade = false
-local Predict_parry = true
-local Parry_mode = "pro hard"
-local parry_method = "Firesignal"
-local config_1 = BallFolder()
-local config_2 = SpamFolder()
-local calculate_1_2 = true
-local autofarm = false
-local ai_play = false
-local ai_farm_rage = false
-local no_delay = false
-local ai_chat = false
-local afk_mode = false
-local idgaf_mode = true
-local skid_fade = false
-
-if idgaf_mode then
-    skid_fade = true
-    skid_pastebin = true
-end
 
 local function calculatePredictionTime(ball)
     local character = player.Character
@@ -71,10 +60,8 @@ local function calculatePredictionTime(ball)
         if rootPart then
             local relativePosition = ball.Position - rootPart.Position
             local relativeVelocity = ball.Velocity
-
             local distance = relativePosition.Magnitude
             local speed = relativeVelocity.Magnitude
-
             if speed > 0 then      
                 return distance / speed
             end
@@ -84,13 +71,12 @@ local function calculatePredictionTime(ball)
 end
 
 local function parry()
-    if canParry then
+    if canParry and getgenv().AutoParryEnabled then
         canParry = false
         VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
         VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
-        
         task.delay(0.1, function()
-            print("parried by using calculater at https://frostware.raw/caculate_bladeball.com")
+            print("Parried")
             canParry = true
         end)
     end
@@ -100,27 +86,18 @@ local function checkProximityToPlayer(ball)
     local predictionTime = calculatePredictionTime(ball)
     local realBallAttribute = ball:GetAttribute("realBall")
     local target = ball:GetAttribute("target")
-
-    if predictionTime and realBallAttribute and target then
-        if target == player.Name then
-            local ballSpeedThreshold = math.max(0.4, 0.6 - ball.Velocity.Magnitude * 0.03)
-
-            if predictionTime <= ballSpeedThreshold then
-                parry()
-            end
+    if predictionTime and realBallAttribute and target == player.Name then
+        local ballSpeedThreshold = math.max(0.4, 0.6 - ball.Velocity.Magnitude * 0.03)
+        if predictionTime <= ballSpeedThreshold then
+            parry()
         end
     end
 end
 
-local function checkBallsProximity()
+RunService.Heartbeat:Connect(function()
     for _, ball in ipairs(BallFolder:GetChildren()) do
         checkProximityToPlayer(ball)
     end
-end
-
--- Hanya jalankan Auto Parry jika toggle aktif
-RunService.Heartbeat:Connect(function()
-    if autoParryEnabled then
-        checkBallsProximity()
-    end
 end)
+
+library:SendNotification("Notification", 5, Color3.new(255, 0, 0))

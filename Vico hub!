@@ -11,21 +11,18 @@ library:init()
 
 local Window1  = library.NewWindow({
     title = "VicoHub | Noob", -- Mainwindow Text
-    size = UDim2.new(0, 510, 0.6, 6
-)})
+    size = UDim2.new(0, 510, 0.6, 6)
+})
 
 local Main = Window1:AddTab("  Main  ")
 local SettingsTab = library:CreateSettingsTab(Window1)
 
---Main:SetText("Text")
-
 local Section1 = Main:AddSection("Section 1", 1)
---Section1:SetText("Text")
 
 -- Simpan status Auto Parry
 local autoParryEnabled = false
 
--- Ubah callback toggle
+-- Toggle Auto Parry
 Section1:AddToggle({
     text = "Auto Parry",
     state = false,
@@ -39,19 +36,11 @@ Section1:AddToggle({
     end
 })
 
--- Fungsi untuk memeriksa proximity bola hanya saat toggle Auto Parry aktif
-RunService.Heartbeat:Connect(function()
-    if autoParryEnabled then
-        checkBallsProximity()
-    end
-end)
-
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 local VirtualInputManager = game:GetService("VirtualInputManager")
 local BallFolder = Workspace:WaitForChild("Balls")
-
 
 local player = Players.LocalPlayer
 local canParry = true
@@ -70,12 +59,12 @@ local no_delay = false
 local ai_chat = false
 local afk_mode = false
 local idgaf_mode = true
-local skid_fade = false,
-if idgaf_mode is true
-then
-do
-local skid_fade = true
-local skid_pastebin = true
+local skid_fade = false
+
+if idgaf_mode then
+    skid_fade = true
+    skid_pastebin = true
+end
 
 local function calculatePredictionTime(ball)
     local character = player.Character
@@ -110,114 +99,9 @@ local function parry()
 end
 
 local function checkProximityToPlayer(ball)
-local predictionTime = calculatePredictionTime(ball)
-local realBallAttribute = ball:GetAttribute("realBall")
-local target = ball:GetAttribute("target")
-
-    if predictionTime and realBallAttribute and target then
-        if targlocal Decimals = 4
-local Clock = os.clock()
-local ValueText = "Value Is Now :"
-
-local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/drillygzzly/Roblox-UI-Libs/main/1%20Tokyo%20Lib%20(FIXED)/Tokyo%20Lib%20Source.lua"))({
-    cheatname = "VicoHub", -- watermark text
-    gamename = "BladeBall", -- watermark text
-})
-
-library:init()
-
-local Window1  = library.NewWindow({
-    title = "VicoHub | Noob", -- Mainwindow Text
-    size = UDim2.new(0, 510, 0.6, 6
-)})
-
-local Main = Window1:AddTab("  Main  ")
-local SettingsTab = library:CreateSettingsTab(Window1)
-
---Main:SetText("Text")
-
-local Section1 = Main:AddSection("Section 1", 1)
---Section1:SetText("Text")
-
-Section1:AddToggle({
-    text = "Auto Parry",
-    state = false,
-    risky = true,
-    tooltip = "tooltip1",
-    flag = "Toggle_1",
-    risky = false,
-    callback = function(v)
-        print(ValueText, v)
-    end
-})
-
-local RunService = game:GetService("RunService")
-local Players = game:GetService("Players")
-local Workspace = game:GetService("Workspace")
-local VirtualInputManager = game:GetService("VirtualInputManager")
-local BallFolder = Workspace:WaitForChild("Balls")
-
-
-local player = Players.LocalPlayer
-local canParry = true
-local canSpam = false
-local Titan_blade = false
-local Predict_parry = true
-local Parry_mode = "pro hard"
-local parry_method = "Firesignal"
-local config_1 = BallFolder()
-local config_2 = SpamFolder()
-local calculate_1_2 = true
-local autofarm = false
-local ai_play = false
-local ai_farm_rage = false
-local no_delay = false
-local ai_chat = false
-local afk_mode = false
-local idgaf_mode = true
-local skid_fade = false,
-if idgaf_mode is true
-then
-do
-local skid_fade = true
-local skid_pastebin = true
-
-local function calculatePredictionTime(ball)
-    local character = player.Character
-    if character then
-        local rootPart = character:FindFirstChild("HumanoidRootPart")
-        if rootPart then
-            local relativePosition = ball.Position - rootPart.Position
-            local relativeVelocity = ball.Velocity
-
-            local distance = relativePosition.Magnitude
-            local speed = relativeVelocity.Magnitude
-
-            if speed > 0 then      
-                return distance / speed
-            end
-        end
-    end
-    return math.huge 
-end
-
-local function parry()
-    if canParry then
-        canParry = false
-        VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
-        VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
-        
-        task.delay(0.1, function()
-            print("parried by using calculater at https://frostware.raw/caculate_bladeball.com")
-            canParry = true
-        end)
-    end
-end
-
-local function checkProximityToPlayer(ball)
-local predictionTime = calculatePredictionTime(ball)
-local realBallAttribute = ball:GetAttribute("realBall")
-local target = ball:GetAttribute("target")
+    local predictionTime = calculatePredictionTime(ball)
+    local realBallAttribute = ball:GetAttribute("realBall")
+    local target = ball:GetAttribute("target")
 
     if predictionTime and realBallAttribute and target then
         if target == player.Name then
@@ -229,19 +113,16 @@ local target = ball:GetAttribute("target")
         end
     end
 end
-              
-RunService.Heartbeat:Connect(function()
-    checkBallsProximity()
-end)et == player.Name then
-            local ballSpeedThreshold = math.max(0.4, 0.6 - ball.Velocity.Magnitude * 0.03)
 
-            if predictionTime <= ballSpeedThreshold then
-                parry()
-            end
-        end
+local function checkBallsProximity()
+    for _, ball in ipairs(BallFolder:GetChildren()) do
+        checkProximityToPlayer(ball)
     end
 end
-              
+
+-- Hanya jalankan Auto Parry jika toggle aktif
 RunService.Heartbeat:Connect(function()
-    checkBallsProximity()
+    if autoParryEnabled then
+        checkBallsProximity()
+    end
 end)

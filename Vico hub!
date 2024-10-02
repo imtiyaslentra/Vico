@@ -50,24 +50,30 @@ end
 
 -- Membuat jendela
 local Window = OrionLib:MakeWindow({
-    Name = "Vico Hub | Intergrated ",
+    Name = "Vico Hub | Integrated ",
     IntroText = "Vico Noob",
     HidePremium = false
 })
 
 local Tab = Window:MakeTab({
-	Name = "Main",
-	Icon = "rbxassetid://4483345998",
-	PremiumOnly = false
+    Name = "Main",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
 })
+
+-- Variabel untuk menyimpan status
+local canParry = false
+local AutoWalk = false
+local PlayerSafety = false
+local BaseDistance = 0
 
 -- Toggle untuk Auto Parry
 Tab:AddToggle({
     Name = "Auto Parry",
     Default = false,
     Callback = function(state)
-        canParry = State
-        if Value then
+        canParry = state  -- Perbaikan: ganti 'State' menjadi 'state'
+        if state then     -- Perbaikan: ganti 'Value' menjadi 'state'
             print("Auto Parry Enabled")
         else
             print("Auto Parry Disabled")
@@ -75,13 +81,8 @@ Tab:AddToggle({
     end    
 })
 
--- Variabel untuk menyimpan status
-local AutoWalk = false
-local PlayerSafety = false -- Perbaikan: Mengubah PlayerSaftey menjadi PlayerSafety
-local BaseDistance = 0
-
 -- Toggle untuk Auto Walk
-local AutoWalkToggle = Tab:AddToggle({
+Tab:AddToggle({
     Name = "Auto Walk",
     Default = false,
     Callback = function(state)
@@ -95,23 +96,24 @@ local AutoWalkToggle = Tab:AddToggle({
 })
 
 -- Slider untuk Parry Base Distance
-local BaseDistanceSlider = Tab:AddSlider({
+Tab:AddSlider({
     Name = "Parry Base Distance",
     Min = 0,
     Max = 100,
     Default = 0,
-    Callback = function(state)
-        BaseDistance = state
+    Callback = function(value)  -- Menggunakan 'value' di sini
+        BaseDistance = value
         print("Base Distance set to: " .. BaseDistance)
     end
 })
 
 -- Toggle untuk Player Safety
-local PlayerSafetyToggle = Tab:AddToggle({
+Tab:AddToggle({
     Name = "Player Safety",
     Default = false,
     Callback = function(state)
         PlayerSafety = state
+        if PlayerSafety then
             print("Player Safety Enabled")
         else
             print("Player Safety Disabled")
@@ -119,63 +121,29 @@ local PlayerSafetyToggle = Tab:AddToggle({
     end
 })
 
--- Initialize variables
-local BaseDistance = 0
-local AutoWalk = false
+-- Slider untuk Player Safety Distance
+Tab:AddSlider({
+    Name = "Player Safety Distance",
+    Min = 0,
+    Max = 50,
+    Default = 10,
+    Callback = function(value)
+        PlayerSafety_Distance = value
+        print("Player Safety Distance set to: " .. PlayerSafety_Distance)
+    end
+})
+
+-- Menginisialisasi variabel tambahan untuk pengaturan lainnya
 local AutoDoubleJump = false
 local AutoRealWalk = false
-local PlayerSafety = false
-local PlayerSafety_Distance = 10
 
--- Function to safely set values with error handling
+-- Fungsi untuk menangani error saat mengatur nilai
 local function safeSet(value, min, max)
     if value < min or value > max then
         error("Value out of bounds: " .. value)
     end
     return value
 end
-
--- Slider for Parry Base Distance
-Ragebot.Slider("Parry Base Distance", 0, 100, BaseDistance, function(t)
-    pcall(function()
-        BaseDistance = safeSet(t, 0, 100)
-    end)
-end)
-
--- Toggle for Auto Walk
-Ragebot.Toggle("Auto Walk", AutoWalk, function(t)
-    pcall(function()
-        AutoWalk = t
-    end)
-end)
-
--- Toggle for Auto Double Jump
-Ragebot.Toggle("Auto Jump", AutoDoubleJump, function(t)
-    pcall(function()
-        AutoDoubleJump = t
-    end)
-end)
-
--- Toggle for Realistic Auto Walk
-Ragebot.Toggle("Realistic Auto Walk", AutoRealWalk, function(t)
-    pcall(function()
-        AutoRealWalk = t
-    end)
-end)
-
--- Toggle for Player Safety
-Ragebot.Toggle("Player Safety", PlayerSafety, function(t)
-    pcall(function()
-        PlayerSafety = t
-    end)
-end)
-
--- Slider for Player Safety Distance
-Ragebot.Slider("Player Safety Distance", 0, 50, PlayerSafety_Distance, function(v)
-    pcall(function()
-        PlayerSafety_Distance = safeSet(v, 0, 50)
-    end)
-end)
 
 -- Error handling for the entire script
 local function main()

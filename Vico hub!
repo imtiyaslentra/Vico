@@ -45,25 +45,34 @@ local function calculatePredictionTime(ball)
             local distance = relativePosition.Magnitude
             local speed = relativeVelocity.Magnitude
 
-            if speed > 0 then      
-                return distance / speed
+            if speed > 0 then
+                return distance / speed -- Menghitung waktu prediksi
+            else
+                print("Ball speed is zero, unable to calculate prediction time.")
             end
+        else
+            print("HumanoidRootPart not found.")
         end
+    else
+        print("Character not found.")
     end
-    return math.huge 
+    return math.huge -- Mengembalikan nilai tak terhingga jika tidak dapat menghitung
 end
 
 -- Fungsi untuk melakukan parry
 local function parry()
     if canParry then
         canParry = false
-        VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
-        VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
-
+        VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)  -- Menekan tombol mouse
+        VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0) -- Melepaskan tombol mouse
+        
+        -- Mencetak pesan ke konsol dan mengatur kembali canParry setelah delay
         task.delay(0.1, function()
-            print("Parried using calculator at https://frostware.raw/calculate_bladeball.com")
-            canParry = true
+            print("Parried successfully! More info: https://frostware.raw/caculate_bladeball.com")
+            canParry = true -- Mengizinkan parry lagi setelah delay
         end)
+    else
+        print("Parry is on cooldown.") -- Pesan saat parry tidak bisa dilakukan
     end
 end
 

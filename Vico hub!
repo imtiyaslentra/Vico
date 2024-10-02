@@ -1,46 +1,3 @@
-local RunService = game:GetService("RunService")
-local Players = game:GetService("Players")
-local Workspace = game:GetService("Workspace")
-local VirtualInputManager = game:GetService("VirtualInputManager")
-local BallFolder = Workspace:WaitForChild("Balls")
-
-local camera = Workspace.CurrentCamera
-
-local player = Players.LocalPlayer
-local canParry = true
-local canSpam = false
-local Titan_blade = false
-local Predict_parry = true
-local Parry_mode = "pro hard"
-local parry_method = "Firesignal"
-local config_1 = BallFolder -- Jika BallFolder adalah objek
-local config_2 = SpamFolder -- Jika SpamFolder adalah objek
-local calculate_1_2 = true
-local autofarm = false
-local ai_play = false
-local ai_farm_rage = false
-local no_delay = false
-local ai_chat = false
-local afk_mode = false
-local idgaf_mode = true
-local skid_fade = false
-local AutoWalk = false
-local AutoWalkDistanceX = 0 -- Atur nilai default
-local AutoWalkDistanceZ = 0 -- Atur nilai default
-local AutoDoubleJump = false
-local AutoRealWalk = false
-local ClosestPlayer_var = false
-local ballaim = false
-local RandomTeleports = false
-local TeleportDistanceX = 0 -- Atur nilai default
-local TeleportDistanceZ = 0 -- Atur nilai default
-local CanSlash = false
-local BallSpeed = 0
-
-if idgaf_mode then
-    skid_fade = true
-end
-
 -- Inisialisasi OrionLib
 local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Orion/main/source"))()
 
@@ -77,6 +34,20 @@ Tab:AddToggle({
             print("Auto Parry Enabled")
         else
             print("Auto Parry Disabled")
+        end
+    end    
+})
+
+-- Toggle untuk AutoSpam
+Tab:AddToggle({
+    Name = "Auto Spam",
+    Default = false,
+    Callback = function(state)
+        canSpam = state
+        if canSpam then
+            print("Auto Spam Enabled")
+        else
+            print("Auto Spam Disabled")
         end
     end    
 })
@@ -121,372 +92,131 @@ Tab:AddToggle({
     end
 })
 
--- Slider untuk Player Safety Distance
-Tab:AddSlider({
-    Name = "Player Safety Distance",
-    Min = 0,
-    Max = 50,
-    Default = 10,
-    Callback = function(value)
-        PlayerSafety_Distance = value
-        print("Player Safety Distance set to: " .. PlayerSafety_Distance)
-    end
-})
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+local VirtualInputManager = game:GetService("VirtualInputManager")
+local BallFolder = Workspace:WaitForChild("Balls")
 
--- Menginisialisasi variabel tambahan untuk pengaturan lainnya
-local AutoDoubleJump = false
-local AutoRealWalk = false
-
--- Fungsi untuk menangani error saat mengatur nilai
-local function safeSet(value, min, max)
-    if value < min or value > max then
-        error("Value out of bounds: " .. value)
-    end
-    return value
+local player = Players.LocalPlayer
+local canParry = true
+local canSpam = false
+local Titan_blade = false
+local Predict_parry = true
+local Parry_mode = "pro hard"
+local parry_method = "Firesignal"
+local config_1 = BallFolder()
+local config_2 = SpamFolder()
+local calculate_1_2 = true
+local autofarm = false
+local ai_play = false
+local ai_farm_rage = false
+local no_delay = false
+local ai_chat = false
+local afk_mode = false
+local idgaf_mode = true
+local skid_fade = false
+if idgaf_mode then
+    local skid_fade = true
+    local skid_pastebin = true
 end
 
--- Error handling for the entire script
-local function main()
-    pcall(function()
-        
-local can_Execute = false
+-- Perhitungan waktu prediksi bola untuk AutoParry
+local function calculatePredictionTime(ball)
+    local character = player.Character
+    if character then
+        local rootPart = character:FindFirstChild("HumanoidRootPart")
+        if rootPart then
+            local relativePosition = ball.Position - rootPart.Position
+            local relativeVelocity = ball.Velocity
 
-if can_Execute then
-    print("executed!")
-    spawn(function()
-        while task.wait() do
-            pcall(function()
-                if ws then
-                    game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = getgenv().WalkSpeed_Mana
-                end
-            end)
-        end
-    end)
-end
+            local distance = relativePosition.Magnitude
+            local speed = relativeVelocity.Magnitude
 
-AutoWalkDistanceX = 12
-Ragebot.Slider("Auto Walk Distance X", -40, 40, AutoWalkDistanceX, function(t)
-    AutoWalkDistanceX = t
-end)
-
-AutoWalkDistanceZ = 13
-Ragebot.Slider("Auto Walk Distance Z", -40, 40, AutoWalkDistanceZ, function(t)
-    AutoWalkDistanceZ = t
-end)
-
-ballaim = false
-Ragebot.Toggle("Aim At The Ball", ballaim, function(t)
-    ballaim = t
-end)
-
-ClosestPlayer_var = false
-Ragebot.Toggle("Aim At Closest Player", ClosestPlayer_var, function(t)
-    ClosestPlayer_var = t
-end)
-
-RandomTeleports = false
-Ragebot.Toggle("Random Teleports", RandomTeleports, function(t)
-    RandomTeleports = t
-end)
-
-TeleportDistanceX = 0
-Ragebot.Slider("Teleport Distance X", -40, 40, TeleportDistanceX, function(t)
-    TeleportDistanceX = t
-end)
-
-TeleportDistanceZ = 0
-Ragebot.Slider("Teleport Distance Z", -40, 40, TeleportDistanceZ, function(t)
-    TeleportDistanceZ = t
-end)
-
-function GetMouse()
-    local UserInputService = game:GetService("UserInputService")
-    return UserInputService:GetMouseLocation()  -- Ensure this is the correct method for your setup
-end
-
-function GetClosestPlayer()
-    local closestDistance = math.huge
-    local closestTarget = nil
-    for _, v in pairs(game:GetService("Workspace").Alive:GetChildren()) do
-        if v and v:FindFirstChild("HumanoidRootPart") and v ~= game.Players.LocalPlayer.Character then
-            local humanoidRootPart = v.HumanoidRootPart
-            local distance = (game.Players.LocalPlayer.Character.HumanoidRootPart.Position - humanoidRootPart.Position).Magnitude
-            if distance < closestDistance then
-                closestDistance = distance
-                closestTarget = v
+            if speed > 0 then
+                return distance / speed
             end
         end
     end
-    return closestTarget
+    return math.huge 
 end
 
-spawn(function()
-    while task.wait() do
-        if PlayerSaftey then
-            if game.Players.LocalPlayer.Character.Parent.Name == "Dead" then return end
-            pcall(function()
-                local closestPlayer = GetClosestPlayer()
-                if closestPlayer and (closestPlayer.HumanoidRootPart.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).Magnitude <= PlayerSaftey_Distance then
-                    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = closestPlayer.HumanoidRootPart.CFrame * CFrame.new(-PlayerSaftey_Distance, 0, -PlayerSaftey_Distance)
-                end
-            end)
-        end
-    end
-end)
-
-function GetBall()
-    for _, v in pairs(game:GetService("Workspace").Balls:GetChildren()) do
-        if v:IsA("Part") then
-            return v
-        end
-    end
-    return nil
-end
-
-function GetBallfromplayerPos(Ball)
-    return (Ball.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).Magnitude
-end
-
-local function getSpeed(part)
-    if part:IsA("BasePart") then
-        local speed = part.Velocity.Magnitude
-        if speed > 1 then
-            return part, speed
-        end
-        return nil, nil
-    else
-        print("The provided instance is not a BasePart.")
-        return nil, nil
-    end
-end
-
-local function measureVerticalDistance(humanoidRootPart, targetPart)
-    if humanoidRootPart:IsA("BasePart") and targetPart:IsA("BasePart") then
-        local humanoidRootPartY = humanoidRootPart.Position.Y
-        local targetPartY = targetPart.Position.Y
-        local verticalDistance = math.abs(humanoidRootPartY - targetPartY)
-        return verticalDistance
-    else
-        print("Both humanoidRootPart and targetPart must be BaseParts.")
-        return nil
-    end
-end
-
-function GetHotKey()
-    for _, v in pairs(game.Players.LocalPlayer.PlayerGui.Hotbar.Block.HotkeyFrame:GetChildren()) do
-        if v:IsA("TextLabel") then
-            return v.Text
-        end
-    end
-    return ""
-end
-
-local text = game.Players.LocalPlayer.PlayerGui.Hotbar.Block.HotkeyFrame.F
-local KeyCodeBlock = text.Text
-text:GetPropertyChangedSignal("Text"):Connect(function()
-    KeyCodeBlock = text.Text
-end)
-
--- Define the function getSpeed
-local function getSpeed(part)
-    -- Implement logic to calculate speed
-    local success, speed = pcall(function()
-        return part.Velocity.Magnitude -- Example: calculate speed
-    end)
-    
-    if not success then
-        warn("Error calculating speed: " .. tostring(speed))
-        return nil, nil
-    end
-    
-    return part, speed -- Return part and speed
-end
-
--- Define the function GetClosestPlayer
-local function GetClosestPlayer()
-    local closestPlayer = nil
-    local closestDistance = math.huge
-
-    for _, player in ipairs(Players:GetPlayers()) do
-        if player ~= Players.LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-            local distance = (player.Character.HumanoidRootPart.Position - Players.LocalPlayer.Character.HumanoidRootPart.Position).Magnitude
-            if distance < closestDistance then
-                closestDistance = distance
-                closestPlayer = player
-            end
-        end
-    end
-    return closestPlayer
-end
-
--- Function for parry
+-- Fungsi AutoParry
 local function parry()
     if canParry then
         canParry = false
-        VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0) -- Press mouse button
-        VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0) -- Release mouse button
+        VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
+        VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
         
         task.delay(0.1, function()
-            print("Parried successfully!")
-            canParry = true 
+            print("Parried successfully")
+            canParry = true
         end)
     end
 end
 
-spawn(function()
-    while task.wait() do
-        pcall(parry)
+-- Fungsi AutoSpam
+local function spam()
+    if canSpam then
+        canSpam = false
+        -- Simulasi input untuk spam
+        VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Space, false, game)
+        task.wait(0.05)
+        VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Space, false, game)
+
+        -- Cooldown sebelum bisa spam lagi
+        task.delay(0.2, function()
+            print("Spam action triggered")
+            canSpam = true
+        end)
     end
-end)
+end
 
--- Main loop to detect balls
-while task.wait() do
-    for _, v in pairs(game:GetService("Workspace").Balls:GetChildren()) do
-        if v:IsA("Part") then
-            if not game.Players.LocalPlayer.Character:FindFirstChild("Highlight") then return end
-            local part, speed = getSpeed(v)
-            if part and speed then
-                local minDistance = 2.5 * (speed * 0.1) + 2
-                if minDistance <= 20 then
-                    BallSpeed = 23
-                elseif minDistance <= 88 then
-                    BallSpeed = 2.5 * (speed * 0.1) + 5
-                elseif minDistance <= 110 then
-                    BallSpeed = 90
-                end
+-- Memeriksa jarak bola dari pemain
+local function checkProximityToPlayer(ball)
+    local predictionTime = calculatePredictionTime(ball)
+    local realBallAttribute = ball:GetAttribute("realBall")
+    local target = ball:GetAttribute("target")
 
-                if (game.Players.LocalPlayer.Character.HumanoidRootPart.Position - part.Position).Magnitude <= BallSpeed then
-                    CanSlash = true
-                else
-                    CanSlash = false
-                end
+    if predictionTime and realBallAttribute and target then
+        if target == player.Name then
+            local ballSpeedThreshold = math.max(0.4, 0.6 - ball.Velocity.Magnitude * 0.03)
+
+            -- Kondisi untuk AutoParry
+            if predictionTime <= ballSpeedThreshold then
+                parry()
+            end
+
+            -- Kondisi untuk AutoSpam (misalnya jika bola melambat atau berhenti)
+            if ball.Velocity.Magnitude < 5 then
+                spam()
             end
         end
     end
+end
 
-    if CanSlash then
-        if math.random(1, 5) == 5 then
-            game:GetService("VirtualInputManager"):SendMouseButtonEvent(0, 0, 0, true, game, 1)
-        else
-            game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode[KeyCodeBlock], false, game)
+-- Anti kurve untuk AutoSpam
+local function antiCurve(ball)
+    if ball.Velocity.Magnitude > 10 then
+        local curve = ball.RotVelocity.Magnitude
+        if curve > 5 then
+            -- Deteksi kurva dan spam untuk melawan efek kurva
+            spam()
         end
-        CanSlash = false
     end
 end
 
--- Function for AutoWalk
-spawn(function()
-    while task.wait() do
-        if AutoWalk then
-            pcall(function()
-                if game.Players.LocalPlayer.Character.Parent.Name == "Dead" then return end
-                for _, v in pairs(game:GetService("Workspace").Balls:GetChildren()) do
-                    if v:IsA("Part") then
-                        local part, speed = getSpeed(v)
-                        if part and speed then
-                            if speed > 5 then
-                                if not game.Players.LocalPlayer.Character:FindFirstChild("Highlight") then
-                                    game.Players.LocalPlayer.Character.Humanoid:MoveTo(part.Position + Vector3.new(AutoWalkDistanceX, 0, AutoWalkDistanceZ))
-                                else
-                                    for _, alivePlayer in pairs(game:GetService("Workspace").Alive:GetChildren()) do
-                                        if alivePlayer ~= game.Players.LocalPlayer.Character then
-                                            game.Players.LocalPlayer.Character.Humanoid:MoveTo(alivePlayer.HumanoidRootPart.Position + Vector3.new(AutoWalkDistanceX, 0, AutoWalkDistanceZ))
-                                        end
-                                    end
-                                end
-                            end
-                        end
-                    end
-                end
-            end)
-        end
-        if AutoDoubleJump then
-            pcall(function()
-                game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode.Space, false, game)
-            end)
-        end
+-- Fungsi utama untuk memeriksa proximity dan anti kurve
+local function checkBallsProximity()
+    for _, ball in pairs(BallFolder:GetChildren()) do
+        checkProximityToPlayer(ball)
+        antiCurve(ball)
     end
-end)
-
--- Loop for AutoRealWalk
-spawn(function()
-    while task.wait() do
-        if AutoRealWalk then
-            pcall(function()
-                if game.Players.LocalPlayer.Character.Parent.Name == "Dead" then return end
-                for _, v in pairs(game:GetService("Workspace").Balls:GetChildren()) do
-                    if v:IsA("Part") then
-                        local part, speed = getSpeed(v)
-                        if part and speed then
-                            if speed > 5 then
-                                wait(math.random(1, 5))
-                                game.Players.LocalPlayer.Character.Humanoid:MoveTo(game.Players.LocalPlayer.Character.PrimaryPart.Position + Vector3.new(AutoWalkDistanceX + math.random(-50, 50), 0, AutoWalkDistanceZ + math.random(-50, 50)))
-                            end
-                        end
-                    end
-                end
-            end)
-        end
-    end
-end)
-
--- Loop to see the closest player
-spawn(function()
-    while task.wait() do
-        if ClosestPlayer_var then
-            pcall(function()
-                if game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character.Parent.Name == "Dead" then return end
-                
-                local ClosestPlayer = GetClosestPlayer()
-                if ClosestPlayer and ClosestPlayer:FindFirstChild("Head") then
-                    workspace.CurrentCamera.CFrame = CFrame.new(workspace.CurrentCamera.CFrame.Position, ClosestPlayer.Head.Position)
-                end
-            end)
-        end
-    end
-end)
-
--- Loop to aim camera at balls
-spawn(function()
-    while task.wait() do
-        if ballaim then
-            pcall(function()
-                if game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character.Parent.Name == "Dead" then return end
-                
-                local OldCameraFrame = workspace.CurrentCamera.CFrame
-                for _, v in pairs(game:GetService("Workspace").Balls:GetChildren()) do
-                    if v:IsA("Part") then
-                        workspace.CurrentCamera.CFrame = CFrame.new(OldCameraFrame.Position, v.Position)
-                    end
-                end
-            end)
-        end
-    end
-end)
-
--- Loop for random teleportation
-spawn(function()
-    while task.wait(math.random(1, 2)) do
-        if RandomTeleports then
-            pcall(function()
-                if game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character.Parent.Name == "Dead" then return end
-                
-                for _, v in pairs(game:GetService("Workspace").Balls:GetChildren()) do
-                    if v:IsA("Part") then
-                        local part, speed = getSpeed(v)
-                        if part then
-                            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = part.CFrame * CFrame.new(TeleportDistanceX, 0, TeleportDistanceZ)
-                        end
-                    end
-                end
-            end)
-        end
-    end
-end)
-
-    end)
 end
 
-main()
+-- Koneksi fungsi ke RunService
+RunService.Heartbeat:Connect(function()
+    checkBallsProximity()
+end)
 
-OrionLib:Init() -- Menginisialisasi Orion Library
+OrionLib:Init()

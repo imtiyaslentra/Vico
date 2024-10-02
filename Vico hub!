@@ -51,16 +51,22 @@ end
 -- Membuat jendela
 local Window = OrionLib:MakeWindow({
     Name = "Vico Hub | Intergrated ",
-    IntroText = "Vico \Noob/",
+    IntroText = "Vico Noob",
     HidePremium = false
+})
+
+local Tab = Window:MakeTab({
+	Name = "Main",
+	Icon = "rbxassetid://4483345998",
+	PremiumOnly = false
 })
 
 -- Toggle untuk Auto Parry
 Tab:AddToggle({
     Name = "Auto Parry",
     Default = false,
-    Callback = function(Value)
-        canParry = Value
+    Callback = function(state)
+        canParry = State
         if Value then
             print("Auto Parry Enabled")
         else
@@ -78,8 +84,8 @@ local BaseDistance = 0
 local AutoWalkToggle = Tab:AddToggle({
     Name = "Auto Walk",
     Default = false,
-    Callback = function(Value)
-        AutoWalk = Value
+    Callback = function(state)
+        AutoWalk = state
         if AutoWalk then
             print("Auto Walk Enabled")
         else
@@ -94,8 +100,8 @@ local BaseDistanceSlider = Tab:AddSlider({
     Min = 0,
     Max = 100,
     Default = 0,
-    Callback = function(Value)
-        BaseDistance = Value
+    Callback = function(state)
+        BaseDistance = state
         print("Base Distance set to: " .. BaseDistance)
     end
 })
@@ -104,9 +110,8 @@ local BaseDistanceSlider = Tab:AddSlider({
 local PlayerSafetyToggle = Tab:AddToggle({
     Name = "Player Safety",
     Default = false,
-    Callback = function(Value)
-        PlayerSafety = Value -- Perbaikan: Mengubah PlayerSaftey menjadi PlayerSafety
-        if PlayerSafety then
+    Callback = function(state)
+        PlayerSafety = state
             print("Player Safety Enabled")
         else
             print("Player Safety Disabled")

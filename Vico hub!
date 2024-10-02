@@ -4,14 +4,6 @@ local Workspace = game:GetService("Workspace")
 local VirtualInputManager = game:GetService("VirtualInputManager")
 local BallFolder = Workspace:WaitForChild("Balls")
 
--- Memastikan SpamFolder ada
-local SpamFolder = Workspace:FindFirstChild("SpamFolder")
-if not SpamFolder then
-    SpamFolder = Instance.new("Folder")
-    SpamFolder.Name = "SpamFolder"
-    SpamFolder.Parent = Workspace
-end
-
 local camera = Workspace.CurrentCamera
 
 local player = Players.LocalPlayer
@@ -38,9 +30,17 @@ if idgaf_mode then
 end
 
 local success, err = pcall(function()
-    -- Kode yang ingin Anda jalankan
     local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Orion/main/source"))()
+    if OrionLib then
+        print("OrionLib loaded successfully")
+    else
+        error("OrionLib is nil")
+    end
 end)
+
+if not success then
+    print("Error: " .. err)
+end
 
 if not success then
     print("Error loading OrionLibrary: " .. err)

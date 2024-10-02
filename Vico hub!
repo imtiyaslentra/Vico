@@ -41,30 +41,18 @@ if idgaf_mode then
     skid_fade = true
 end
 
-local success, err = pcall(function()
-    local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Orion/main/source"))()
-    if OrionLib then
-        print("OrionLib loaded successfully")
-    else
-        error("OrionLib is nil")
-    end
-end)
+-- Inisialisasi OrionLib
+local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Orion/main/source"))()
 
-if not success then
-    print("Error: " .. err)
+if not OrionLib then
+    error("Failed to load OrionLib")
 end
 
-if not success then
-    print("Error loading OrionLibrary: " .. err)
-end
-
-local Window = OrionLib:MakeWindow({Name = "Vico Hub (Just Noob)", IntroText = "Vico Hub", HidePremium = false})
-
--- Membuat Tab
-local Tab = Window:MakeTab({
-    Name = "Main",
-    Icon = "rbxassetid://4483345998",
-    PremiumOnly = false
+-- Membuat jendela
+local Window = OrionLib:MakeWindow({
+    Name = "Vico Hub | Intergrated ",
+    IntroText = "Vico \Noob/",
+    HidePremium = false
 })
 
 -- Toggle untuk Auto Parry

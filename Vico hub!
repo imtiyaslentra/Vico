@@ -1,68 +1,86 @@
--- Load Orion Library
 local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
+local Window = OrionLib:MakeWindow({Name = "Blade Ball Auto Parry", HidePremium = false, SaveConfig = true, ConfigFolder = "OrionTest"})
 
--- Create a new window
-local Window = OrionLib:MakeWindow({Name = "Auto Parry Control", HidePremium = false, IntroEnabled = false})
-
--- Create a tab for settings
-local Tab = Window:MakeTab({
-	Name = "Settings",
-	Icon = "rbxassetid://4483345998",
-	PremiumOnly = false
+-- Tabs
+local MainTab = Window:MakeTab({
+    Name = "Main",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
 })
 
--- Add Auto Parry Toggle
-Tab:AddToggle({
-	Name = "Enable Auto Parry",
-	Default = false,
-	Callback = function(value)
-		getgenv().AutoParryEnabled = value
-		print("Auto Parry is now set to:", value)
-	end
+-- Autoparry Toggle
+local AutoParryToggle = MainTab:AddToggle({
+    Name = "Auto Parry",
+    Default = false,
+    Callback = function(value)
+        canParry = value
+    end
 })
 
--- Add Walkspeed Slider
-Tab:AddSlider({
-	Name = "Walkspeed",
-	Min = 0,
-	Max = 120,
-	Default = 16,
-	Color = Color3.fromRGB(255,255,255),
-	Increment = 1,
-	ValueName = "Walkspeed",
-	Callback = function(value)
-		print("Walkspeed set to:", value)
-	end
+-- Ping Toggle & Display
+local PingDisplay = MainTab:AddLabel("Ping: 0 ms")
+
+local function updatePing()
+    local ping = game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValueString()
+    PingDisplay:Set("Ping: " .. ping)
+end
+
+RunService.Heartbeat:Connect(function()
+    updatePing()
+end)
+
+-- Distance Visualizer Toggle
+local DistanceToggle = MainTab:AddToggle({
+    Name = "Visualizer",
+    Default = false,
+    Callback = function(value)
+        canVisualize = value
+    end
 })
 
--- Add Damage Multiplier Textbox
-Tab:AddTextbox({
-	Name = "Damage Multiplier",
-	Default = "",
-	TextDisappear = true,
-	Callback = function(value)
-		print("Damage Multiplier set to:", value)
-	end
-})
+-- Function to Create Visualizer Part (Circle)
+local function createVisualizerPart(position, radius)
+    local visualizer = Instance.new("Part")
+    visualizer.Shape = Enum.PartType.Ball
+    visualizer.Size = Vector3.new(radius * 2, radius * 2, radius * 2)
+    visualizer.CFrame = CFrame.new(position)
+    visualizer.Anchored = true
+    visualizer.CanCollide = false
+    visualizer.Transparency = 0.5
+    visualizer.BrickColor = BrickColor.new("Bright green")
+    visualizer.Parent = Workspace
+    return visualizer
+end
 
--- Add Kill All Button
-Tab:AddButton({
-	Name = "Kill All",
-	Callback = function()
-		print("Killing all!")
-	end
-})
+-- Function to Update Visualizer
+local function updateVisualizer(ball)
+    if canVisualize then
+        local character = player.Character
+        if character then
+            local rootPart = character:FindFirstChild("HumanoidRootPart")
+            if rootPart then
+                local distance = (ball.Position - rootPart.Position).Magnitude
+                local visualizer = createVisualizerPart(rootPart.Position, distance)
+                task.delay(0.1, function()
+                    visualizer:Destroy()
+                end)
+            end
+        end
+    end
+end
 
--- Auto Parry Logic (No Changes to Function)
-local RunService = game:GetService("RunService")
-local Players = game:GetService("Players")
-local Workspace = game:GetService("Workspace")
-local VirtualInputManager = game:GetService("VirtualInputManager")
-local BallFolder = Workspace:WaitForChild("Balls")
+-- Hook to Check Proximity and Update Visualizer
+RunService.Heartbeat:Connect(function()
+    for _, ball in ipairs(BallFolder:GetChildren()) do
+        checkProximityToPlayer(ball)
+        updateVisualizer(ball)
+    end
+end)
 
-local player = Players.LocalPlayer
-local canParry = true
+-- Required Orion Library Initialization
+OrionLib:Init()
 
+-- Autoparry Logic as Provided by You
 local function calculatePredictionTime(ball)
     local character = player.Character
     if character then
@@ -70,25 +88,26 @@ local function calculatePredictionTime(ball)
         if rootPart then
             local relativePosition = ball.Position - rootPart.Position
             local relativeVelocity = ball.Velocity
+
             local distance = relativePosition.Magnitude
             local speed = relativeVelocity.Magnitude
 
-            if speed > 0 then
+            if speed > 0 then      
                 return distance / speed
             end
         end
     end
-    return math.huge
+    return math.huge 
 end
 
 local function parry()
-    if canParry and getgenv().AutoParryEnabled then
+    if canParry then
         canParry = false
         VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
         VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
         
         task.delay(0.1, function()
-            print("Parried successfully!")
+            print("parried by using calculater at https://frostware.raw/caculate_bladeball.com")
             canParry = true
         end)
     end
@@ -110,11 +129,9 @@ local function checkProximityToPlayer(ball)
     end
 end
 
+-- Main Loop for Proximity Check
 RunService.Heartbeat:Connect(function()
-    for _, ball in pairs(BallFolder:GetChildren()) do
+    for _, ball in ipairs(BallFolder:GetChildren()) do
         checkProximityToPlayer(ball)
     end
 end)
-
--- Initialize the GUI
-OrionLib:Init()

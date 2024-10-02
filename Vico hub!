@@ -1,16 +1,3 @@
-local RunService = game:GetService("RunService")
-local Players = game:GetService("Players")
-local Workspace = game:GetService("Workspace")
-local VirtualInputManager = game:GetService("VirtualInputManager")
-local BallFolder = Workspace:WaitForChild("Balls")
-
-local player = Players.LocalPlayer
-local canParry = false  -- Akan diubah melalui toggle
-local canSpam = false   -- Akan diubah melalui toggle
-local notificationCooldown = false -- Membatasi pengiriman notifikasi
-local parrySuccess = false -- Menghindari spam notifikasi saat Autoparry berhasil
-local spamSuccess = false -- Menghindari spam notifikasi saat Autospam berhasil
-
 -- Membuat jendela untuk OrionLib
 local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Orion/main/source"))()
 local Window = OrionLib:MakeWindow({Name = "Vico Hub | Integrated", IntroText = "Vico Noob", HidePremium = false})
@@ -77,7 +64,7 @@ local Workspace = game:GetService("Workspace")
 local player = Players.LocalPlayer
 local canParry = true
 local canSpam = true
-local parryDistance = 15 -- Jarak maksimal untuk AutoParry
+local parryDistance = 10 -- Jarak maksimal untuk AutoParry
 local spamDistance = 10 -- Jarak untuk AutoSpam
 local parrySpeedThreshold = 0.5 -- Batas kecepatan bola untuk AutoParry
 local spamSpeedThreshold = 0.8 -- Batas kecepatan bola untuk AutoSpam
@@ -166,18 +153,35 @@ local function checkProximityToPlayer(ball)
     if rootPart then
         local distanceToBall = (ball.Position - rootPart.Position).Magnitude
 
-        -- Cek apakah bola sedang berhenti
-        if ball.Velocity.Magnitude == 0 then
-            showNotification("Bola berhenti, tidak ada aksi", true)
-            return
-        end
+        -- Cek apakah bola mengarah ke pemain
+        local ballDirection = (ball.Position - rootPart.Position).Unit
+        local targetDirection = ball.Velocity.Unit
 
         -- Cek AutoParry
-        if distanceToBall <= parryDistance and predictionTime <= parrySpeedThreshold then
-            parry()
+        if distanceToBall <= parryDistance then
+            if targetDirection:Dot(ballDirection) > 0.5 then
+                -- Bola mengarah ke pemain
+                showNotification("Bola telah menuju ke Anda, siap untuk parry.", true)
+
+                if ball.Velocity.Magnitude > parrySpeedThreshold then
+                    parry()
+                end
+            else
+                -- Bola tidak mengarah
+                showNotification("Bola tidak mengarah ke Anda, tidak ada parry untuk saat ini.", true)
+            end
+        end
+
         -- Cek AutoSpam
-        elseif distanceToBall <= spamDistance and predictionTime <= spamSpeedThreshold then
+        if distanceToBall <= spamDistance and predictionTime <= spamSpeedThreshold then
             spam()
+        end
+
+        -- Notifikasi tambahan berdasarkan kecepatan dan kurva
+        if ball.Velocity.Magnitude > parrySpeedThreshold and targetDirection:Dot(ballDirection) > 0.5 then
+            showNotification("Bola semakin cepat, akan melakukan deteksi kemungkinan AutoSpam.", true)
+        elseif ball.Velocity.Magnitude < parrySpeedThreshold and targetDirection:Dot(ballDirection) > 0.5 then
+            showNotification("Bola melambat karena kurve, Parry akan ditahan terlebih dahulu untuk menyamakan distance.", true)
         end
     end
 end

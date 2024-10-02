@@ -121,7 +121,6 @@ local function parry()
         VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
         VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
 
-        -- Jeda kecil agar tidak mengunci input terlalu lama
         task.delay(0.1, function()
             showNotification("Parry was successful!", true)
             canParry = true
@@ -136,7 +135,6 @@ local function spam()
         VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
         VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
 
-        -- Jeda kecil agar tidak mengunci input terlalu lama
         task.delay(0.1, function()
             showNotification("Spam was successful!", false)
             canSpam = true
@@ -166,21 +164,21 @@ local function checkProximityToPlayer(ball)
                 if ball.Velocity.Magnitude > parrySpeedThreshold then
                     parry()
                 end
+
+                -- Jika bola mengarah ke pemain dan berada dalam jarak spam
+                if distanceToBall <= spamDistance and ball.Velocity.Magnitude > spamSpeedThreshold then
+                    spam() -- Lakukan spam setelah parry
+                end
             else
                 -- Bola tidak mengarah
                 showNotification("Bola tidak mengarah ke Anda, tidak ada parry untuk saat ini.", true)
             end
         end
 
-        -- Cek AutoSpam
-        if distanceToBall <= spamDistance and predictionTime <= spamSpeedThreshold then
-            spam()
-        end
-
         -- Notifikasi tambahan berdasarkan kecepatan dan kurva
-        if ball.Velocity.Magnitude > parrySpeedThreshold and targetDirection:Dot(ballDirection) > 0.5 then
-            showNotification("Bola semakin cepat, akan melakukan deteksi kemungkinan AutoSpam.", true)
-        elseif ball.Velocity.Magnitude < parrySpeedThreshold and targetDirection:Dot(ballDirection) > 0.5 then
+        if distanceToBall <= spamDistance and ball.Velocity.Magnitude > parrySpeedThreshold and targetDirection:Dot(ballDirection) > 0.5 then
+            showNotification("Bola semakin cepat, akan melakukan deteksi kemungkinan AutoSpam.", false)
+        elseif targetDirection:Dot(ballDirection) < 0.5 and ball.Velocity.Magnitude < parrySpeedThreshold then
             showNotification("Bola melambat karena kurve, Parry akan ditahan terlebih dahulu untuk menyamakan distance.", true)
         end
     end

@@ -1,32 +1,57 @@
--- Load ImGUI Library
-local ImGui = loadstring(game:HttpGet("https://raw.githubusercontent.com/depthso/Roblox-ImGUI/main/lib.lua"))()
+-- Load Orion Library
+local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
 
 -- Create a new window
-local window = ImGui.new("Auto Parry Control", Vector2.new(300, 400))
+local Window = OrionLib:MakeWindow({Name = "Auto Parry Control", HidePremium = false, IntroEnabled = false})
 
--- Main Menu
-local tab = window:addTab("Main Settings")
+-- Create a tab for settings
+local Tab = Window:MakeTab({
+	Name = "Settings",
+	Icon = "rbxassetid://4483345998",
+	PremiumOnly = false
+})
 
 -- Add Auto Parry Toggle
-tab:addCheckbox("Enable Auto Parry", function(value)
-    getgenv().AutoParryEnabled = value
-    print("Auto Parry is now set to:", value)
-end, false) -- Default set to false
+Tab:AddToggle({
+	Name = "Enable Auto Parry",
+	Default = false,
+	Callback = function(value)
+		getgenv().AutoParryEnabled = value
+		print("Auto Parry is now set to:", value)
+	end
+})
 
 -- Add Walkspeed Slider
-tab:addSlider("Walkspeed", 0, 120, 16, function(value)
-    print("Walkspeed set to:", value)
-end)
+Tab:AddSlider({
+	Name = "Walkspeed",
+	Min = 0,
+	Max = 120,
+	Default = 16,
+	Color = Color3.fromRGB(255,255,255),
+	Increment = 1,
+	ValueName = "Walkspeed",
+	Callback = function(value)
+		print("Walkspeed set to:", value)
+	end
+})
 
 -- Add Damage Multiplier Textbox
-tab:addTextbox("Damage Multiplier", function(value)
-    print("Damage Multiplier set to:", value)
-end)
+Tab:AddTextbox({
+	Name = "Damage Multiplier",
+	Default = "",
+	TextDisappear = true,
+	Callback = function(value)
+		print("Damage Multiplier set to:", value)
+	end
+})
 
 -- Add Kill All Button
-tab:addButton("Kill All", function()
-    print("Killing all!")
-end)
+Tab:AddButton({
+	Name = "Kill All",
+	Callback = function()
+		print("Killing all!")
+	end
+})
 
 -- Auto Parry Logic (No Changes to Function)
 local RunService = game:GetService("RunService")
@@ -91,5 +116,5 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 
--- Show GUI
-window:show()
+-- Initialize the GUI
+OrionLib:Init()

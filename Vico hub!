@@ -12,8 +12,6 @@ local Titan_blade = false
 local Predict_parry = true
 local Parry_mode = "pro hard"
 local parry_method = "Firesignal"
-local config_1 = BallFolder()
-local config_2 = SpamFolder()
 local calculate_1_2 = true
 local autofarm = false
 local ai_play = false
@@ -55,9 +53,9 @@ local function parry()
         canParry = false
         VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
         VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
-        
+
         task.delay(0.1, function()
-            print("parried by using calculater at https://frostware.raw/caculate_bladeball.com")
+            print("parried by using calculator at https://frostware.raw/calculate_bladeball.com")
             canParry = true
         end)
     end

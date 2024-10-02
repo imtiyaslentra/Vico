@@ -63,10 +63,13 @@ local VirtualInputManager = game:GetService("VirtualInputManager")
 local BallFolder = Workspace:WaitForChild("Balls")
 
 local player = Players.LocalPlayer
-local canParry = false -- Menentukan apakah AutoParry aktif
-local canSpam = false -- Menentukan apakah AutoSpam aktif
+local canParry = true
+local canSpam = false
+local parryDistance = 10
+local spamDistance = 12
+local parry_method = "Firesignal"
 
--- Fungsi untuk menghitung waktu prediksi
+-- Fungsi untuk menghitung waktu prediksi kedatangan bola
 local function calculatePredictionTime(ball)
     local character = player.Character
     if character then
@@ -75,87 +78,93 @@ local function calculatePredictionTime(ball)
             local relativePosition = ball.Position - rootPart.Position
             local relativeVelocity = ball.Velocity
 
-            local distance = relativePosition.Magnitude -- Menghitung jarak
-            local speed = relativeVelocity.Magnitude -- Menghitung kecepatan
+            local distance = relativePosition.Magnitude
+            local speed = relativeVelocity.Magnitude
 
-            if speed > 0 then
-                return distance / speed -- Menghitung waktu prediksi
+            if speed > 0 then      
+                return distance / speed
             end
         end
     end
-    return math.huge -- Mengembalikan nilai besar jika tidak ada prediksi
+    return math.huge 
 end
 
--- Fungsi untuk melakukan parry
-local function parry()
-    if canParry then -- Memeriksa apakah parry diizinkan
-        canParry = false -- Menonaktifkan sementara parry
-        VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0) -- Mengirimkan event mouse untuk parry
-        VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0) -- Mengirimkan event mouse untuk menyelesaikan parry
+-- Fungsi untuk memeriksa proximity bola dengan player
+local function checkProximityToPlayer(ball)
+    local predictionTime = calculatePredictionTime(ball)
+    local realBallAttribute = ball:GetAttribute("realBall")
+    local target = ball:GetAttribute("target")
+    local ballVelocity = ball.Velocity.Magnitude
 
-        task.delay(0.1, function()
-            print("Parry successful!") -- Pesan berhasil parry
-            canParry = true -- Mengaktifkan kembali parry
+    -- Jika bola adalah target pemain dan jaraknya sesuai dengan deteksi parry
+    if predictionTime and realBallAttribute and target then
+        if target == player.Name then
+            -- Menambahkan jarak dan threshold kecepatan bola
+            local ballSpeedThreshold = math.max(0.4, 0.6 - ballVelocity * 0.03)
+            local rootPart = player.Character:FindFirstChild("HumanoidRootPart")
+            if rootPart then
+                local distance = (ball.Position - rootPart.Position).Magnitude
+                
+                -- Panggil AutoParry jika kondisi jarak, kecepatan, dan threshold terpenuhi
+                if distance <= parryDistance and predictionTime <= ballSpeedThreshold then
+                    parry()
+                end
+            end
+        end
+    end
+end
+
+-- Fungsi AutoParry
+local function parry()
+    if canParry then
+        canParry = false
+        -- Jeda singkat untuk memastikan input mouse tidak mengganggu pergerakan
+        task.spawn(function()
+            task.wait(0.05) -- Jeda sangat singkat (50ms) sebelum mengirim input mouse
+            VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
+            VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
+            
+            print("Auto Parry Successful")
+            canParry = true -- Aktifkan kembali AutoParry setelah jeda
         end)
     end
 end
 
--- Fungsi untuk melakukan spam
-local function spam()
-    if canSpam then -- Memeriksa apakah spam diizinkan
-        VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0) -- Mengirimkan event mouse untuk spam
-        VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0) -- Mengirimkan event mouse untuk menyelesaikan spam
-        print("Spam attack!") -- Pesan saat melakukan spam
-    end
-end
+-- Fungsi AutoSpam
+local function autoSpam(ball)
+    local character = player.Character
+    if character then
+        local rootPart = character:FindFirstChild("HumanoidRootPart")
+        if rootPart then
+            local distance = (ball.Position - rootPart.Position).Magnitude
 
--- Fungsi untuk mendapatkan entitas terdekat
-local function get_closest_entity(Object)
-    local closest_Entity
-    local max_distance = math.huge
-    for _, entity in Workspace.Alive:GetChildren() do
-        if entity.Name ~= player.Name and entity:FindFirstChild("HumanoidRootPart") then
-            local distance = (Object.Position - entity.HumanoidRootPart.Position).Magnitude
-            if distance < max_distance then
-                closest_Entity = entity
-                max_distance = distance
-            end
-        end
-    end
-    return closest_Entity
-end
-
--- Fungsi untuk memeriksa kedekatan bola dengan pemain untuk parry
-local function checkProximityToPlayer(ball)
-    local predictionTime = calculatePredictionTime(ball) -- Menghitung waktu prediksi untuk bola
-    local realBallAttribute = ball:GetAttribute("realBall") -- Mendapatkan atribut nyata bola
-    local target = ball:GetAttribute("target") -- Mendapatkan target bola
-
-    if predictionTime and realBallAttribute and target then -- Memeriksa apakah semua nilai valid
-        if target == player.Name then -- Memeriksa apakah target adalah pemain
-            local ballSpeedThreshold = math.max(0.4, 0.6 - ball.Velocity.Magnitude * 0.03) -- Menghitung ambang kecepatan bola
-
-            if predictionTime <= ballSpeedThreshold then -- Jika waktu prediksi lebih kecil atau sama dengan ambang
-                parry() -- Melakukan parry
+            -- AutoSpam jika jarak dengan bola memenuhi syarat
+            if distance <= spamDistance and canSpam then
+                VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
+                VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
+                print("Auto Spam Activated")
             end
         end
     end
 end
 
--- Fungsi untuk memeriksa kedekatan bola dengan pemain untuk spam
-local function checkProximityToSpam(ball)
-    local distanceToBall = (ball.Position - player.Character.HumanoidRootPart.Position).Magnitude -- Menghitung jarak bola ke pemain
-    if distanceToBall <= 10 then -- Ganti dengan jarak yang diinginkan
-        spam() -- Melakukan spam
-    end
-end
-
--- Menghubungkan event heartbeat untuk memeriksa bola setiap frame
+-- Monitor bola dan aktifkan fungsi
 RunService.Heartbeat:Connect(function()
-    for _, ball in ipairs(BallFolder:GetChildren()) do -- Iterasi semua bola dalam folder
-        checkProximityToPlayer(ball) -- Memeriksa kedekatan untuk parry
-        checkProximityToSpam(ball) -- Memeriksa kedekatan untuk spam
+    for _, ball in pairs(BallFolder:GetChildren()) do
+        if ball:IsA("Part") and ball:FindFirstChild("Velocity") then
+            checkProximityToPlayer(ball)
+            autoSpam(ball)
+        end
     end
-end)
+end).
 
-OrionLib:Init()
+-- Penanganan notifikasi jika gagal atau berhasil
+local function notifyResult(success, reason)
+    if success then
+        print("Parry/Spam was Successful!")
+    else
+        print("Failed due to: " .. reason)
+    end
+end
+
+OriobLib:Init()

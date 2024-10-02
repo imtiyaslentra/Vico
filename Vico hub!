@@ -3,11 +3,16 @@ local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 local VirtualInputManager = game:GetService("VirtualInputManager")
 local BallFolder = Workspace:WaitForChild("Balls")
-local SpamFolder = Workspace:WaitForChild("SpamFolder") -- Pastikan SpamFolder ada
-local SpamFolder = Instance.new("Folder")
-SpamFolder.Name = "SpamFolder"
-SpamFolder.Parent = Workspace
-local camera = workspace.CurrentCamera
+
+-- Memastikan SpamFolder ada
+local SpamFolder = Workspace:FindFirstChild("SpamFolder")
+if not SpamFolder then
+    SpamFolder = Instance.new("Folder")
+    SpamFolder.Name = "SpamFolder"
+    SpamFolder.Parent = Workspace
+end
+
+local camera = Workspace.CurrentCamera
 
 local player = Players.LocalPlayer
 local canParry = true
@@ -30,12 +35,15 @@ local skid_fade = false
 
 if idgaf_mode then
     skid_fade = true
-    skid_pastebin = true
 end
 
 -- Memuat OrionLibrary
 local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Orion/main/source"))()
-local Window = OrionLib:MakeWindow({Name = "Blade Ball Auto Parry", IntroText = "Welcome to Blade Ball!", HidePremium = false})
+if not OrionLib then
+    error("Failed to load OrionLibrary")
+end
+
+local Window = OrionLib:MakeWindow({Name = "Vico Hub (Just Noob)", IntroText = "Vico Hub", HidePremium = false})
 
 -- Membuat Tab
 local Tab = Window:MakeTab({

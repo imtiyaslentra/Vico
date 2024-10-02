@@ -1,41 +1,46 @@
--- Inisialisasi OrionLib
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+local VirtualInputManager = game:GetService("VirtualInputManager")
+local BallFolder = Workspace:WaitForChild("Balls")
+
+local player = Players.LocalPlayer
+local canParry = false  -- Akan diubah melalui toggle
+local canSpam = false   -- Akan diubah melalui toggle
+local notificationEnabled = true -- Untuk menampilkan notifikasi
+
+-- Membuat jendela untuk OrionLib
 local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Orion/main/source"))()
-
-if not OrionLib then
-    error("Failed to load OrionLib")
-end
-
--- Membuat jendela
-local Window = OrionLib:MakeWindow({
-    Name = "Vico Hub | Integrated ",
-    IntroText = "Vico Noob",
-    HidePremium = false
-})
+local Window = OrionLib:MakeWindow({Name = "Vico Hub | Integrated", IntroText = "Vico Noob", HidePremium = false})
 
 local Tab = Window:MakeTab({
-    Name = "Main",
-    Icon = "rbxassetid://4483345998",
-    PremiumOnly = false
+	Name = "Main",
+	Icon = "rbxassetid://4483345998",
+	PremiumOnly = false
 })
 
--- Variabel untuk menyimpan status
-local canParry = false
-local AutoWalk = false
-local PlayerSafety = false
-local BaseDistance = 0
-
--- Toggle untuk Auto Parry
+-- Toggle untuk AutoParry
 Tab:AddToggle({
     Name = "Auto Parry",
     Default = false,
     Callback = function(state)
-        canParry = state  -- Perbaikan: ganti 'State' menjadi 'state'
-        if state then     -- Perbaikan: ganti 'Value' menjadi 'state'
+        canParry = state
+        if state then
             print("Auto Parry Enabled")
+            OrionLib:MakeNotification({
+                Name = "Auto Parry",
+                Content = "Auto Parry has been enabled.",
+                Time = 5
+            })
         else
             print("Auto Parry Disabled")
+            OrionLib:MakeNotification({
+                Name = "Auto Parry",
+                Content = "Auto Parry has been disabled.",
+                Time = 5
+            })
         end
-    end    
+    end
 })
 
 -- Toggle untuk AutoSpam
@@ -44,84 +49,25 @@ Tab:AddToggle({
     Default = false,
     Callback = function(state)
         canSpam = state
-        if canSpam then
+        if state then
             print("Auto Spam Enabled")
+            OrionLib:MakeNotification({
+                Name = "Auto Spam",
+                Content = "Auto Spam has been enabled.",
+                Time = 5
+            })
         else
             print("Auto Spam Disabled")
-        end
-    end    
-})
-
--- Toggle untuk Auto Walk
-Tab:AddToggle({
-    Name = "Auto Walk",
-    Default = false,
-    Callback = function(state)
-        AutoWalk = state
-        if AutoWalk then
-            print("Auto Walk Enabled")
-        else
-            print("Auto Walk Disabled")
+            OrionLib:MakeNotification({
+                Name = "Auto Spam",
+                Content = "Auto Spam has been disabled.",
+                Time = 5
+            })
         end
     end
 })
 
--- Slider untuk Parry Base Distance
-Tab:AddSlider({
-    Name = "Parry Base Distance",
-    Min = 0,
-    Max = 100,
-    Default = 0,
-    Callback = function(value)  -- Menggunakan 'value' di sini
-        BaseDistance = value
-        print("Base Distance set to: " .. BaseDistance)
-    end
-})
-
--- Toggle untuk Player Safety
-Tab:AddToggle({
-    Name = "Player Safety",
-    Default = false,
-    Callback = function(state)
-        PlayerSafety = state
-        if PlayerSafety then
-            print("Player Safety Enabled")
-        else
-            print("Player Safety Disabled")
-        end
-    end
-})
-
-local RunService = game:GetService("RunService")
-local Players = game:GetService("Players")
-local Workspace = game:GetService("Workspace")
-local VirtualInputManager = game:GetService("VirtualInputManager")
-local BallFolder = Workspace:WaitForChild("Balls")
-
-local player = Players.LocalPlayer
-local canParry = true
-local canSpam = false
-local Titan_blade = false
-local Predict_parry = true
-local Parry_mode = "pro hard"
-local parry_method = "Firesignal"
-local config_1 = BallFolder()
-local config_2 = SpamFolder()
-local calculate_1_2 = true
-local autofarm = false
-local ai_play = false
-local ai_farm_rage = false
-local no_delay = false
-local ai_chat = false
-local afk_mode = false
-local idgaf_mode = true
-local skid_fade = false
-if idgaf_mode then
-    local skid_fade = true
-    local skid_pastebin = true
-end
-
--- Perhitungan waktu prediksi bola untuk AutoParry
+-- Fungsi untuk menghitung waktu prediksi bola
 local function calculatePredictionTime(ball)
     local character = player.Character
     if character then
@@ -133,7 +79,7 @@ local function calculatePredictionTime(ball)
             local distance = relativePosition.Magnitude
             local speed = relativeVelocity.Magnitude
 
-            if speed > 0 then
+            if speed > 0 then      
                 return distance / speed
             end
         end
@@ -141,38 +87,58 @@ local function calculatePredictionTime(ball)
     return math.huge 
 end
 
--- Fungsi AutoParry
+-- Fungsi untuk melakukan Parry
 local function parry()
     if canParry then
         canParry = false
         VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
         VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
-        
+
         task.delay(0.1, function()
-            print("Parried successfully")
+            print("Parried!")
+            OrionLib:MakeNotification({
+                Name = "Auto Parry",
+                Content = "Parry was successful.",
+                Time = 5
+            })
             canParry = true
         end)
+    else
+        OrionLib:MakeNotification({
+            Name = "Auto Parry",
+            Content = "Parry failed due to cooldown or error.",
+            Time = 5
+        })
     end
 end
 
--- Fungsi AutoSpam
+-- Fungsi untuk melakukan Spam
 local function spam()
     if canSpam then
         canSpam = false
-        -- Simulasi input untuk spam
+        -- Contoh mekanisme spam
         VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Space, false, game)
-        task.wait(0.05)
         VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Space, false, game)
 
-        -- Cooldown sebelum bisa spam lagi
-        task.delay(0.2, function()
-            print("Spam action triggered")
+        task.delay(0.1, function()
+            print("Spam Executed!")
+            OrionLib:MakeNotification({
+                Name = "Auto Spam",
+                Content = "Spam was successful.",
+                Time = 5
+            })
             canSpam = true
         end)
+    else
+        OrionLib:MakeNotification({
+            Name = "Auto Spam",
+            Content = "Spam failed due to cooldown or error.",
+            Time = 5
+        })
     end
 end
 
--- Memeriksa jarak bola dari pemain
+-- Fungsi untuk memeriksa kedekatan bola dengan pemain dan memicu parry atau spam
 local function checkProximityToPlayer(ball)
     local predictionTime = calculatePredictionTime(ball)
     local realBallAttribute = ball:GetAttribute("realBall")
@@ -182,41 +148,30 @@ local function checkProximityToPlayer(ball)
         if target == player.Name then
             local ballSpeedThreshold = math.max(0.4, 0.6 - ball.Velocity.Magnitude * 0.03)
 
-            -- Kondisi untuk AutoParry
             if predictionTime <= ballSpeedThreshold then
-                parry()
-            end
-
-            -- Kondisi untuk AutoSpam (misalnya jika bola melambat atau berhenti)
-            if ball.Velocity.Magnitude < 5 then
-                spam()
+                if canParry then
+                    parry()
+                elseif canSpam then
+                    spam()
+                end
             end
         end
     end
 end
 
--- Anti kurve untuk AutoSpam
-local function antiCurve(ball)
-    if ball.Velocity.Magnitude > 10 then
-        local curve = ball.RotVelocity.Magnitude
-        if curve > 5 then
-            -- Deteksi kurva dan spam untuk melawan efek kurva
-            spam()
-        end
-    end
-end
-
--- Fungsi utama untuk memeriksa proximity dan anti kurve
+-- Fungsi untuk memeriksa bola di sekitar pemain
 local function checkBallsProximity()
-    for _, ball in pairs(BallFolder:GetChildren()) do
-        checkProximityToPlayer(ball)
-        antiCurve(ball)
+    for _, ball in ipairs(BallFolder:GetChildren()) do
+        if ball:IsA("BasePart") then
+            checkProximityToPlayer(ball)
+        end
     end
 end
 
--- Koneksi fungsi ke RunService
+-- Menjalankan pengecekan proximity secara berkala
 RunService.Heartbeat:Connect(function()
     checkBallsProximity()
 end)
 
+-- Menginisialisasi OrionLib
 OrionLib:Init()

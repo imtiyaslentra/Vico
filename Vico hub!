@@ -7,7 +7,9 @@ local BallFolder = Workspace:WaitForChild("Balls")
 local player = Players.LocalPlayer
 local canParry = false  -- Akan diubah melalui toggle
 local canSpam = false   -- Akan diubah melalui toggle
-local notificationEnabled = true -- Untuk menampilkan notifikasi
+local notificationCooldown = false -- Membatasi pengiriman notifikasi
+local parrySuccess = false -- Menghindari spam notifikasi saat Autoparry berhasil
+local spamSuccess = false -- Menghindari spam notifikasi saat Autospam berhasil
 
 -- Membuat jendela untuk OrionLib
 local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Orion/main/source"))()
@@ -67,6 +69,21 @@ Tab:AddToggle({
     end
 })
 
+-- Fungsi untuk membatasi notifikasi agar tidak terlalu sering
+local function sendNotification(name, content)
+    if not notificationCooldown then
+        OrionLib:MakeNotification({
+            Name = name,
+            Content = content,
+            Time = 5
+        })
+        notificationCooldown = true
+        task.delay(1, function() -- Delay 1 detik untuk cooldown notifikasi
+            notificationCooldown = false
+        end)
+    end
+end
+
 -- Fungsi untuk menghitung waktu prediksi bola
 local function calculatePredictionTime(ball)
     local character = player.Character
@@ -89,52 +106,40 @@ end
 
 -- Fungsi untuk melakukan Parry
 local function parry()
-    if canParry then
+    if canParry and not parrySuccess then
         canParry = false
+        parrySuccess = true
         VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
         VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
 
         task.delay(0.1, function()
             print("Parried!")
-            OrionLib:MakeNotification({
-                Name = "Auto Parry",
-                Content = "Parry was successful.",
-                Time = 5
-            })
+            sendNotification("Auto Parry", "Parry was successful.")
             canParry = true
+            parrySuccess = false
         end)
-    else
-        OrionLib:MakeNotification({
-            Name = "Auto Parry",
-            Content = "Parry failed due to cooldown or error.",
-            Time = 5
-        })
+    elseif not canParry then
+        sendNotification("Auto Parry", "Parry failed due to cooldown or error.")
     end
 end
 
 -- Fungsi untuk melakukan Spam
 local function spam()
-    if canSpam then
+    if canSpam and not spamSuccess then
         canSpam = false
+        spamSuccess = true
         -- Contoh mekanisme spam
         VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Space, false, game)
         VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Space, false, game)
 
         task.delay(0.1, function()
             print("Spam Executed!")
-            OrionLib:MakeNotification({
-                Name = "Auto Spam",
-                Content = "Spam was successful.",
-                Time = 5
-            })
+            sendNotification("Auto Spam", "Spam was successful.")
             canSpam = true
+            spamSuccess = false
         end)
-    else
-        OrionLib:MakeNotification({
-            Name = "Auto Spam",
-            Content = "Spam failed due to cooldown or error.",
-            Time = 5
-        })
+    elseif not canSpam then
+        sendNotification("Auto Spam", "Spam failed due to cooldown or error.")
     end
 end
 
@@ -151,8 +156,8 @@ local function checkProximityToPlayer(ball)
             if predictionTime <= ballSpeedThreshold then
                 if canParry then
                     parry()
-                elseif canSpam then
-                    spam()
+                elseif canSpam and not canParry then
+                    spam() -- Memastikan bahwa spam hanya terjadi jika parry tidak aktif
                 end
             end
         end

@@ -2,8 +2,7 @@ local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 local VirtualInputManager = game:GetService("VirtualInputManager")
-local BallFolder = Workspace:WaitForChild("Balls")
-local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Orion/main/source"))() -- Load Orion Library
+local BallFolder = Workspace:WaitForChild("Balls") -- Pastikan ini adalah folder yang benar
 
 local player = Players.LocalPlayer
 local canParry = true
@@ -88,7 +87,7 @@ local function checkProximityToPlayer(ball)
 end
 
 local function checkBallsProximity()
-    for _, ball in ipairs(BallFolder:GetChildren()) do
+    for _, ball in ipairs(BallFolder:GetChildren()) do -- Menggunakan :GetChildren() untuk iterasi
         if ball:IsA("BasePart") and ball:GetAttribute("realBall") then
             checkProximityToPlayer(ball)
         end
@@ -100,6 +99,7 @@ RunService.Heartbeat:Connect(function()
 end)
 
 -- Menambahkan GUI dengan Orion Library
+local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Orion/main/source"))()
 local Window = OrionLib:MakeWindow({Name = "Blade Ball Auto Parry", IntroText = "Welcome to Blade Ball!", HidePremium = false})
 
 -- Toggle untuk Auto Parry

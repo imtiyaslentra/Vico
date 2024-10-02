@@ -1,55 +1,70 @@
--- Credits To The Original Devs @xz, @goof 
-getgenv().Config = {
-    Invite = "informant.wtf",
-    Version = "Intergrated",
-}
-
-getgenv().luaguardvars = {
-    DiscordName = "username#0000",
-}
-
-local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/drillygzzly/Other/main/1"))()
-
-library:init() -- Initalizes Library Do Not Delete This
-
-local Window = library.NewWindow({
-    title = "Informant.Wtf",
-    size = UDim2.new(0, 525, 0, 650)
-})
-
-local tabs = {
-    Tab1 = Window:AddTab("Tab1"),
-    Settings = library:CreateSettingsTab(Window),
-}
-
-local sections = {
-    Section1 = tabs.Tab1:AddSection("Section1", 1),
-    Section2 = tabs.Tab1:AddSection("Section2", 2),
-}
+local UILib = loadstring(game:HttpGet('https://raw.githubusercontent.com/StepBroFurious/Script/main/HydraHubUi.lua'))()
+local Window = UILib.new("Grand Piece Online", game.Players.LocalPlayer.UserId, "Buyer")
+local Category1 = Window:Category("Main", "http://www.roblox.com/asset/?id=8395621517")
+local SubButton1 = Category1:Button("Combat", "http://www.roblox.com/asset/?id=8395747586")
+local Section1 = SubButton1:Section("Section", "Left")
 
 -- Auto Parry Toggle
-sections.Section1:AddToggle({
-    enabled = false,
-    text = "Auto Parry",
-    flag = "Toggle_Parry",
-    tooltip = "Enable or Disable Auto Parry",
-    risky = true, -- turns text to red and sets label to risky
-    callback = function(state)
-        if state then
-            print("Auto Parry Enabled")
-        else
-            print("Auto Parry Disabled")
-        end
-        getgenv().AutoParryEnabled = state
-    end
-})
+Section1:Toggle({
+    Title = "Auto Parry",
+    Description = "Enable/Disable Auto Parry",
+    Default = false
+    }, function(value)
+    -- Integrate with Auto Parry Function
+    getgenv().AutoParryEnabled = value
+    print("Auto Parry is now set to:", value)
+end)
 
--- The original Auto Parry function
+-- Other GUI elements can remain as they are
+Section1:Button({
+    Title = "Kill All",
+    ButtonName = "KILL!!",
+    Description = "kills everyone",
+    }, function(value)
+    print(value)
+end)
+
+Section1:Slider({
+    Title = "Walkspeed",
+    Description = "",
+    Default = 16,
+    Min = 0,
+    Max = 120
+    }, function(value)
+    print(value)
+end)
+
+Section1:ColorPicker({
+    Title = "Colorpicker",
+    Description = "",
+    Default = Color3.new(255,0,0),
+    }, function(value)
+    print(value)
+end)
+
+Section1:Textbox({
+    Title = "Damage Multiplier",
+    Description = "",
+    Default = "",
+    }, function(value)
+    print(value)
+end)
+
+Section1:Keybind({
+    Title = "Kill All",
+    Description = "",
+    Default = Enum.KeyCode.Q,
+    }, function(value)
+    print(value)
+end)
+
+-- Auto Parry Logic (Fungsi ini tetap tidak berubah)
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 local VirtualInputManager = game:GetService("VirtualInputManager")
 local BallFolder = Workspace:WaitForChild("Balls")
+
 local player = Players.LocalPlayer
 local canParry = true
 
@@ -62,12 +77,13 @@ local function calculatePredictionTime(ball)
             local relativeVelocity = ball.Velocity
             local distance = relativePosition.Magnitude
             local speed = relativeVelocity.Magnitude
+
             if speed > 0 then      
                 return distance / speed
             end
         end
     end
-    return math.huge 
+    return math.huge
 end
 
 local function parry()
@@ -75,8 +91,9 @@ local function parry()
         canParry = false
         VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
         VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
+        
         task.delay(0.1, function()
-            print("Parried")
+            print("Parried successfully!")
             canParry = true
         end)
     end
@@ -86,18 +103,20 @@ local function checkProximityToPlayer(ball)
     local predictionTime = calculatePredictionTime(ball)
     local realBallAttribute = ball:GetAttribute("realBall")
     local target = ball:GetAttribute("target")
-    if predictionTime and realBallAttribute and target == player.Name then
-        local ballSpeedThreshold = math.max(0.4, 0.6 - ball.Velocity.Magnitude * 0.03)
-        if predictionTime <= ballSpeedThreshold then
-            parry()
+
+    if predictionTime and realBallAttribute and target then
+        if target == player.Name then
+            local ballSpeedThreshold = math.max(0.4, 0.6 - ball.Velocity.Magnitude * 0.03)
+
+            if predictionTime <= ballSpeedThreshold then
+                parry()
+            end
         end
     end
 end
 
 RunService.Heartbeat:Connect(function()
-    for _, ball in ipairs(BallFolder:GetChildren()) do
+    for _, ball in pairs(BallFolder:GetChildren()) do
         checkProximityToPlayer(ball)
     end
 end)
-
-library:SendNotification("Notification", 5, Color3.new(255, 0, 0))

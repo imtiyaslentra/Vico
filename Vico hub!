@@ -69,22 +69,25 @@ Tab:AddToggle({
     end
 })
 
--- Fungsi untuk membatasi notifikasi agar tidak terlalu sering
-local function sendNotification(name, content)
-    if not notificationCooldown then
-        OrionLib:MakeNotification({
-            Name = name,
-            Content = content,
-            Time = 5
-        })
-        notificationCooldown = true
-        task.delay(1, function() -- Delay 1 detik untuk cooldown notifikasi
-            notificationCooldown = false
-        end)
-    end
-end
+local RunService = game:GetService("RunService")
+local VirtualInputManager = game:GetService("VirtualInputManager")
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
 
--- Fungsi untuk menghitung waktu prediksi bola
+local player = Players.LocalPlayer
+local canParry = true
+local canSpam = true
+local parryDistance = 15 -- Jarak maksimal untuk AutoParry
+local spamDistance = 10 -- Jarak untuk AutoSpam
+local parrySpeedThreshold = 0.5 -- Batas kecepatan bola untuk AutoParry
+local spamSpeedThreshold = 0.8 -- Batas kecepatan bola untuk AutoSpam
+local notificationCooldown = 2 -- Untuk menghindari spam notifikasi
+
+-- Variabel untuk mencegah spam notifikasi
+local lastParryNotificationTime = 0
+local lastSpamNotificationTime = 0
+
+-- Fungsi untuk menghitung prediksi waktu bola mencapai pemain
 local function calculatePredictionTime(ball)
     local character = player.Character
     if character then
@@ -96,87 +99,99 @@ local function calculatePredictionTime(ball)
             local distance = relativePosition.Magnitude
             local speed = relativeVelocity.Magnitude
 
-            if speed > 0 then      
+            if speed > 0 then
                 return distance / speed
             end
         end
     end
-    return math.huge 
+    return math.huge
 end
 
--- Fungsi untuk melakukan Parry
+-- Fungsi untuk menampilkan notifikasi dengan cooldown
+local function showNotification(message, isParry)
+    local currentTime = tick()
+    if isParry and currentTime - lastParryNotificationTime >= notificationCooldown then
+        game.StarterGui:SetCore("SendNotification", {
+            Title = "Auto Parry",
+            Text = message,
+            Duration = 2
+        })
+        lastParryNotificationTime = currentTime
+    elseif not isParry and currentTime - lastSpamNotificationTime >= notificationCooldown then
+        game.StarterGui:SetCore("SendNotification", {
+            Title = "Auto Spam",
+            Text = message,
+            Duration = 2
+        })
+        lastSpamNotificationTime = currentTime
+    end
+end
+
+-- Fungsi untuk melakukan parry
 local function parry()
-    if canParry and not parrySuccess then
+    if canParry then
         canParry = false
-        parrySuccess = true
         VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
         VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
 
+        -- Jeda kecil agar tidak mengunci input terlalu lama
         task.delay(0.1, function()
-            print("Parried!")
-            sendNotification("Auto Parry", "Parry was successful.")
+            showNotification("Parry was successful!", true)
             canParry = true
-            parrySuccess = false
         end)
-    elseif not canParry then
-        sendNotification("Auto Parry", "Parry failed due to cooldown or error.")
     end
 end
 
--- Fungsi untuk melakukan Spam
+-- Fungsi untuk melakukan spam
 local function spam()
-    if canSpam and not spamSuccess then
+    if canSpam then
         canSpam = false
-        spamSuccess = true
-        -- Contoh mekanisme spam
-        VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Space, false, game)
-        VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Space, false, game)
+        VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
+        VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
 
+        -- Jeda kecil agar tidak mengunci input terlalu lama
         task.delay(0.1, function()
-            print("Spam Executed!")
-            sendNotification("Auto Spam", "Spam was successful.")
+            showNotification("Spam was successful!", false)
             canSpam = true
-            spamSuccess = false
         end)
-    elseif not canSpam then
-        sendNotification("Auto Spam", "Spam failed due to cooldown or error.")
     end
 end
 
--- Fungsi untuk memeriksa kedekatan bola dengan pemain dan memicu parry atau spam
+-- Fungsi untuk mengecek apakah bola berada dalam jarak parry atau spam
 local function checkProximityToPlayer(ball)
     local predictionTime = calculatePredictionTime(ball)
-    local realBallAttribute = ball:GetAttribute("realBall")
-    local target = ball:GetAttribute("target")
+    local character = player.Character
+    local rootPart = character and character:FindFirstChild("HumanoidRootPart")
 
-    if predictionTime and realBallAttribute and target then
-        if target == player.Name then
-            local ballSpeedThreshold = math.max(0.4, 0.6 - ball.Velocity.Magnitude * 0.03)
+    if rootPart then
+        local distanceToBall = (ball.Position - rootPart.Position).Magnitude
 
-            if predictionTime <= ballSpeedThreshold then
-                if canParry then
-                    parry()
-                elseif canSpam and not canParry then
-                    spam() -- Memastikan bahwa spam hanya terjadi jika parry tidak aktif
-                end
-            end
+        -- Cek apakah bola sedang berhenti
+        if ball.Velocity.Magnitude == 0 then
+            showNotification("Bola berhenti, tidak ada aksi", true)
+            return
+        end
+
+        -- Cek AutoParry
+        if distanceToBall <= parryDistance and predictionTime <= parrySpeedThreshold then
+            parry()
+        -- Cek AutoSpam
+        elseif distanceToBall <= spamDistance and predictionTime <= spamSpeedThreshold then
+            spam()
         end
     end
 end
 
--- Fungsi untuk memeriksa bola di sekitar pemain
+-- Fungsi untuk memeriksa semua bola di dalam game
 local function checkBallsProximity()
-    for _, ball in ipairs(BallFolder:GetChildren()) do
-        if ball:IsA("BasePart") then
-            checkProximityToPlayer(ball)
-        end
+    for _, ball in ipairs(Workspace.Balls:GetChildren()) do
+        checkProximityToPlayer(ball)
     end
 end
 
--- Menjalankan pengecekan proximity secara berkala
+-- Fungsi utama yang dipanggil secara berkala untuk mengecek AutoParry dan AutoSpam
 RunService.Heartbeat:Connect(function()
     checkBallsProximity()
 end)
 
--- Menginisialisasi OrionLib
 OrionLib:Init()

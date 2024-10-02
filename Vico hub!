@@ -127,35 +127,68 @@ local PlayerSafetyToggle = Tab:AddToggle({
 })
 
 BaseDistance = 0
+-- Initialize variables
+local BaseDistance = 0
+local AutoWalk = false
+local AutoDoubleJump = false
+local AutoRealWalk = false
+local PlayerSafety = false
+local PlayerSafety_Distance = 10
+
+-- Function to safely set values with error handling
+local function safeSet(value, min, max)
+    if value < min or value > max then
+        error("Value out of bounds: " .. value)
+    end
+    return value
+end
+
+-- Slider for Parry Base Distance
 Ragebot.Slider("Parry Base Distance", 0, 100, BaseDistance, function(t)
-    BaseDistance = t
+    pcall(function()
+        BaseDistance = safeSet(t, 0, 100)
+    end)
 end)
 
-AutoWalk = false
+-- Toggle for Auto Walk
 Ragebot.Toggle("Auto Walk", AutoWalk, function(t)
-    AutoWalk = t
+    pcall(function()
+        AutoWalk = t
+    end)
 end)
 
-AutoDoubleJump = false
+-- Toggle for Auto Double Jump
 Ragebot.Toggle("Auto Jump", AutoDoubleJump, function(t)
-    AutoDoubleJump = t
+    pcall(function()
+        AutoDoubleJump = t
+    end)
 end)
 
-AutoRealWalk = false
+-- Toggle for Realistic Auto Walk
 Ragebot.Toggle("Realistic Auto Walk", AutoRealWalk, function(t)
-    AutoRealWalk = t
+    pcall(function()
+        AutoRealWalk = t
+    end)
 end)
 
-PlayerSaftey = false
-Ragebot.Toggle("Player Saftey", PlayerSaftey, function(t)
-    PlayerSaftey = t
+-- Toggle for Player Safety
+Ragebot.Toggle("Player Safety", PlayerSafety, function(t)
+    pcall(function()
+        PlayerSafety = t
+    end)
 end)
 
-PlayerSaftey_Distance = 10
-Ragebot.Slider("Player Saftey Distance", 0, 50, PlayerSaftey_Distance, function(v)
-    PlayerSaftey_Distance = v
+-- Slider for Player Safety Distance
+Ragebot.Slider("Player Safety Distance", 0, 50, PlayerSafety_Distance, function(v)
+    pcall(function()
+        PlayerSafety_Distance = safeSet(v, 0, 50)
+    end)
 end)
 
+-- Error handling for the entire script
+local function main()
+    pcall(function()
+        
 local can_Execute = false
 
 if can_Execute then
@@ -217,11 +250,11 @@ function GetClosestPlayer()
     for _, v in pairs(game:GetService("Workspace").Alive:GetChildren()) do
         if v and v:FindFirstChild("HumanoidRootPart") and v ~= game.Players.LocalPlayer.Character then
             local humanoidRootPart = v.HumanoidRootPart
-                local distance = (game.Players.LocalPlayer.Character.HumanoidRootPart.Position - v.HumanoidRootPart.Position).Magnitude --(Vector2.new(viewportPoint.X, viewportPoint.Y) - mousePos).magnitude
-                if distance < closestDistance then
-                    closestDistance = distance
-                    closestTarget = v
-                end
+            local distance = (game.Players.LocalPlayer.Character.HumanoidRootPart.Position - humanoidRootPart.Position).Magnitude
+            if distance < closestDistance then
+                closestDistance = distance
+                closestTarget = v
+            end
         end
     end
     return closestTarget
@@ -232,8 +265,9 @@ spawn(function()
         if PlayerSaftey then
             if game.Players.LocalPlayer.Character.Parent.Name == "Dead" then return end
             pcall(function()
-                if (GetClosestPlayer().HumanoidRootPart.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).Magnitude <= PlayerSaftey_Distance then
-                    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = GetClosestPlayer().HumanoidRootPart.CFrame * CFrame.new(-PlayerSaftey_Distance, 0, -PlayerSaftey_Distance)
+                local closestPlayer = GetClosestPlayer()
+                if closestPlayer and (closestPlayer.HumanoidRootPart.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).Magnitude <= PlayerSaftey_Distance then
+                    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = closestPlayer.HumanoidRootPart.CFrame * CFrame.new(-PlayerSaftey_Distance, 0, -PlayerSaftey_Distance)
                 end
             end)
         end
@@ -241,7 +275,7 @@ spawn(function()
 end)
 
 function GetBall()
-    for i,v in pairs(game:GetService("Workspace").Balls:GetChildren()) do
+    for _, v in pairs(game:GetService("Workspace").Balls:GetChildren()) do
         if v:IsA("Part") then
             return v
         end
@@ -253,7 +287,6 @@ function GetBallfromplayerPos(Ball)
     return (Ball.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).Magnitude
 end
 
-local function getSpeed(part)
 local function getSpeed(part)
     if part:IsA("BasePart") then
         local speed = part.Velocity.Magnitude
@@ -280,12 +313,12 @@ local function measureVerticalDistance(humanoidRootPart, targetPart)
 end
 
 function GetHotKey()
-	for i,v in pairs(game.Players.LocalPlayer.PlayerGui.Hotbar.Block.HotkeyFrame:GetChildren()) do
-		if v:IsA("TextLabel") then
-			return v.Text
-		end
-	end
-	return ""
+    for _, v in pairs(game.Players.LocalPlayer.PlayerGui.Hotbar.Block.HotkeyFrame:GetChildren()) do
+        if v:IsA("TextLabel") then
+            return v.Text
+        end
+    end
+    return ""
 end
 
 local text = game.Players.LocalPlayer.PlayerGui.Hotbar.Block.HotkeyFrame.F
@@ -294,14 +327,22 @@ text:GetPropertyChangedSignal("Text"):Connect(function()
     KeyCodeBlock = text.Text
 end)
 
--- Definisi fungsi getSpeed
+-- Define the function getSpeed
 local function getSpeed(part)
-    -- Implementasikan logika untuk menghitung kecepatan
-    local speed = part.Velocity.Magnitude -- Contoh: hitung kecepatan
-    return part, speed -- Kembalikan nilai part dan speed
+    -- Implement logic to calculate speed
+    local success, speed = pcall(function()
+        return part.Velocity.Magnitude -- Example: calculate speed
+    end)
+    
+    if not success then
+        warn("Error calculating speed: " .. tostring(speed))
+        return nil, nil
+    end
+    
+    return part, speed -- Return part and speed
 end
 
--- Definisi fungsi GetClosestPlayer
+-- Define the function GetClosestPlayer
 local function GetClosestPlayer()
     local closestPlayer = nil
     local closestDistance = math.huge
@@ -318,12 +359,12 @@ local function GetClosestPlayer()
     return closestPlayer
 end
 
--- Fungsi untuk parry
+-- Function for parry
 local function parry()
     if canParry then
         canParry = false
-        VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0) -- Menekan tombol mouse
-        VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0) -- Melepaskan tombol mouse
+        VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0) -- Press mouse button
+        VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0) -- Release mouse button
         
         task.delay(0.1, function()
             print("Parried successfully!")
@@ -334,11 +375,11 @@ end
 
 spawn(function()
     while task.wait() do
-        parry()
+        pcall(parry)
     end
 end)
 
--- Loop utama untuk mendeteksi bola
+-- Main loop to detect balls
 while task.wait() do
     for _, v in pairs(game:GetService("Workspace").Balls:GetChildren()) do
         if v:IsA("Part") then
@@ -373,7 +414,7 @@ while task.wait() do
     end
 end
 
--- Fungsi untuk AutoWalk
+-- Function for AutoWalk
 spawn(function()
     while task.wait() do
         if AutoWalk then
@@ -407,7 +448,7 @@ spawn(function()
     end
 end)
 
--- Loop untuk AutoRealWalk
+-- Loop for AutoRealWalk
 spawn(function()
     while task.wait() do
         if AutoRealWalk then
@@ -429,7 +470,7 @@ spawn(function()
     end
 end)
 
--- Loop untuk melihat pemain terdekat
+-- Loop to see the closest player
 spawn(function()
     while task.wait() do
         if ClosestPlayer_var then
@@ -445,7 +486,7 @@ spawn(function()
     end
 end)
 
--- Loop untuk mengarahkan kamera ke bola
+-- Loop to aim camera at balls
 spawn(function()
     while task.wait() do
         if ballaim then
@@ -463,7 +504,7 @@ spawn(function()
     end
 end)
 
--- Loop untuk teleport acak
+-- Loop for random teleportation
 spawn(function()
     while task.wait(math.random(1, 2)) do
         if RandomTeleports then
@@ -482,5 +523,10 @@ spawn(function()
         end
     end
 end)
+
+    end)
+end
+
+main()
 
 OrionLib:Init() -- Menginisialisasi Orion Library

@@ -13,6 +13,55 @@ local Parry_mode = "pro hard"
 local parry_method = "Firesignal"
 local previousVelocity = {}
 
+-- Menambahkan GUI dengan Orion Library
+local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Orion/main/source"))()
+local Window = OrionLib:MakeWindow({Name = "Blade Ball Auto Parry", IntroText = "Welcome to Blade Ball!", HidePremium = false})
+
+-- Toggle untuk Auto Parry
+Window:MakeToggle({
+    Name = "Enable Auto Parry",
+    Default = false,
+    Callback = function(Value)
+        canParry = Value
+        if Value then
+            print("Auto Parry Enabled")
+        else
+            print("Auto Parry Disabled")
+        end
+    end
+})
+
+-- Menampilkan status parry
+local StatusLabel = Window:MakeLabel({
+    Name = "Parry Status",
+    Text = "Auto Parry is Disabled",
+})
+
+-- Update label status setiap kali toggle berubah
+Window:MakeToggle({
+    Name = "Show Parry Status",
+    Default = false,
+    Callback = function(Value)
+        if Value then
+            StatusLabel.Text = "Auto Parry is Enabled"
+        else
+            StatusLabel.Text = "Auto Parry is Disabled"
+        end
+    end
+})
+
+-- Menampilkan status ping
+local function displayPing()
+    local pingLabel = Window:MakeLabel({
+        Name = "Ping Status",
+        Text = "Ping: " .. tostring(Players.LocalPlayer:GetNetworkPing())
+    })
+
+    RunService.RenderStepped:Connect(function()
+        pingLabel.Text = "Ping: " .. tostring(Players.LocalPlayer:GetNetworkPing())
+    end)
+end
+
 -- Menghitung waktu prediksi
 local function calculatePredictionTime(ball)
     local character = player.Character
@@ -86,55 +135,6 @@ end
 RunService.Heartbeat:Connect(function()
     checkBallsProximity()
 end)
-
--- Menambahkan GUI dengan Orion Library
-local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Orion/main/source"))()
-local Window = OrionLib:MakeWindow({Name = "Blade Ball Auto Parry", IntroText = "Welcome to Blade Ball!", HidePremium = false})
-
--- Toggle untuk Auto Parry
-Window:MakeToggle({
-    Name = "Enable Auto Parry",
-    Default = false,
-    Callback = function(Value)
-        canParry = Value
-        if Value then
-            print("Auto Parry Enabled")
-        else
-            print("Auto Parry Disabled")
-        end
-    end
-})
-
--- Menampilkan status parry
-local StatusLabel = Window:MakeLabel({
-    Name = "Parry Status",
-    Text = "Auto Parry is Disabled",
-})
-
--- Update label status setiap kali toggle berubah
-Window:MakeToggle({
-    Name = "Show Parry Status",
-    Default = false,
-    Callback = function(Value)
-        if Value then
-            StatusLabel.Text = "Auto Parry is Enabled"
-        else
-            StatusLabel.Text = "Auto Parry is Disabled"
-        end
-    end
-})
-
--- Menambahkan fungsi untuk menampilkan dan mengupdate ping
-local function displayPing()
-    local pingLabel = Window:MakeLabel({
-        Name = "Ping Status",
-        Text = "Ping: " .. tostring(Players.LocalPlayer:GetNetworkPing())
-    })
-
-    RunService.RenderStepped:Connect(function()
-        pingLabel.Text = "Ping: " .. tostring(Players.LocalPlayer:GetNetworkPing())
-    end)
-end
 
 -- Menampilkan status ping
 displayPing()

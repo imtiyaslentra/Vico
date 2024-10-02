@@ -12,9 +12,16 @@ local canParry = true
 local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Orion/main/source"))()
 local Window = OrionLib:MakeWindow({Name = "Blade Ball Auto Parry", IntroText = "Welcome to Blade Ball!", HidePremium = false})
 
+-- Membuat Tab
+local Tab = Window:MakeTab({
+    Name = "Main",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
 -- Toggle untuk Auto Parry
-Window:MakeToggle({
-    Name = "Enable Auto Parry",
+Tab:AddToggle({
+    Name = "Auto Parry",
     Default = false,
     Callback = function(Value)
         canParry = Value
@@ -23,7 +30,7 @@ Window:MakeToggle({
         else
             print("Auto Parry Disabled")
         end
-    end
+    end    
 })
 
 -- Fungsi untuk menghitung waktu prediksi

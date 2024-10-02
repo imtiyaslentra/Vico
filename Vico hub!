@@ -2,18 +2,13 @@ local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 local VirtualInputManager = game:GetService("VirtualInputManager")
-local BallFolder = Workspace:WaitForChild("Balls") -- Mengambil folder bola dari workspace
+local BallFolder = Workspace:WaitForChild("Balls")
 
+-- Inisialisasi player dan variabel kontrol
 local player = Players.LocalPlayer
 local canParry = true
-local canSpam = false
-local Titan_blade = false
-local Predict_parry = true
-local Parry_mode = "pro hard"
-local parry_method = "Firesignal"
-local previousVelocity = {}
 
--- Menambahkan GUI dengan Orion Library
+-- Memuat OrionLibrary
 local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Orion/main/source"))()
 local Window = OrionLib:MakeWindow({Name = "Blade Ball Auto Parry", IntroText = "Welcome to Blade Ball!", HidePremium = false})
 
@@ -31,38 +26,7 @@ Window:MakeToggle({
     end
 })
 
--- Menampilkan status parry
-local StatusLabel = Window:MakeLabel({
-    Name = "Parry Status",
-    Text = "Auto Parry is Disabled",
-})
-
--- Update label status setiap kali toggle berubah
-Window:MakeToggle({
-    Name = "Show Parry Status",
-    Default = false,
-    Callback = function(Value)
-        if Value then
-            StatusLabel.Text = "Auto Parry is Enabled"
-        else
-            StatusLabel.Text = "Auto Parry is Disabled"
-        end
-    end
-})
-
--- Menampilkan status ping
-local function displayPing()
-    local pingLabel = Window:MakeLabel({
-        Name = "Ping Status",
-        Text = "Ping: " .. tostring(Players.LocalPlayer:GetNetworkPing())
-    })
-
-    RunService.RenderStepped:Connect(function()
-        pingLabel.Text = "Ping: " .. tostring(Players.LocalPlayer:GetNetworkPing())
-    end)
-end
-
--- Menghitung waktu prediksi
+-- Fungsi untuk menghitung waktu prediksi
 local function calculatePredictionTime(ball)
     local character = player.Character
     if character then
@@ -74,12 +38,12 @@ local function calculatePredictionTime(ball)
             local distance = relativePosition.Magnitude
             local speed = relativeVelocity.Magnitude
 
-            if speed > 0 then
+            if speed > 0 then      
                 return distance / speed
             end
         end
     end
-    return math.huge
+    return math.huge 
 end
 
 -- Fungsi untuk melakukan parry
@@ -90,13 +54,13 @@ local function parry()
         VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
 
         task.delay(0.1, function()
-            print("Parried by using calculator at https://frostware.raw/calculate_bladeball.com")
+            print("Parried using calculator at https://frostware.raw/calculate_bladeball.com")
             canParry = true
         end)
     end
 end
 
--- Cek kedekatan bola dengan pemain
+-- Fungsi untuk memeriksa kedekatan bola dengan pemain
 local function checkProximityToPlayer(ball)
     local predictionTime = calculatePredictionTime(ball)
     local realBallAttribute = ball:GetAttribute("realBall")
@@ -104,17 +68,7 @@ local function checkProximityToPlayer(ball)
 
     if predictionTime and realBallAttribute and target then
         if target == player.Name then
-            local currentVelocity = ball.Velocity.Magnitude
-            local previousSpeed = previousVelocity[ball] or currentVelocity
-
-            local speedChange = math.abs(currentVelocity - previousSpeed)
-            previousVelocity[ball] = currentVelocity
-
-            if speedChange > 5 then -- Ambang perubahan kecepatan
-                parry()
-            end
-
-            local ballSpeedThreshold = math.max(0.4, 0.6 - currentVelocity * 0.03)
+            local ballSpeedThreshold = math.max(0.4, 0.6 - ball.Velocity.Magnitude * 0.03)
 
             if predictionTime <= ballSpeedThreshold then
                 parry()
@@ -123,20 +77,18 @@ local function checkProximityToPlayer(ball)
     end
 end
 
--- Cek semua bola di proximity
+-- Fungsi untuk memeriksa semua bola di proximity
 local function checkBallsProximity()
-    for _, ball in ipairs(BallFolder:GetChildren()) do -- Menggunakan :GetChildren() untuk iterasi
+    for _, ball in ipairs(BallFolder:GetChildren()) do
         if ball:IsA("BasePart") and ball:GetAttribute("realBall") then
             checkProximityToPlayer(ball)
         end
     end
 end
 
+-- Menghubungkan fungsi ke RunService.Heartbeat
 RunService.Heartbeat:Connect(function()
     checkBallsProximity()
 end)
 
--- Menampilkan status ping
-displayPing()
-
-OrionLib:Init()
+OrionLib:Init() -- Menginisialisasi Orion Library

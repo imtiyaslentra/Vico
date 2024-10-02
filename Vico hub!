@@ -71,7 +71,7 @@ Tab:AddToggle({
 
 -- Variabel untuk menyimpan status
 local AutoWalk = false
-local PlayerSaftey = false
+local PlayerSafety = false -- Perbaikan: Mengubah PlayerSaftey menjadi PlayerSafety
 local BaseDistance = 0
 
 -- Toggle untuk Auto Walk
@@ -105,8 +105,8 @@ local PlayerSafetyToggle = Tab:AddToggle({
     Name = "Player Safety",
     Default = false,
     Callback = function(Value)
-        PlayerSaftey = Value
-        if PlayerSaftey then
+        PlayerSafety = Value -- Perbaikan: Mengubah PlayerSaftey menjadi PlayerSafety
+        if PlayerSafety then
             print("Player Safety Enabled")
         else
             print("Player Safety Disabled")
@@ -114,7 +114,6 @@ local PlayerSafetyToggle = Tab:AddToggle({
     end
 })
 
-BaseDistance = 0
 -- Initialize variables
 local BaseDistance = 0
 local AutoWalk = false

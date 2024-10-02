@@ -37,10 +37,13 @@ if idgaf_mode then
     skid_fade = true
 end
 
--- Memuat OrionLibrary
-local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Orion/main/source"))()
-if not OrionLib then
-    error("Failed to load OrionLibrary")
+local success, err = pcall(function()
+    -- Kode yang ingin Anda jalankan
+    local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Orion/main/source"))()
+end)
+
+if not success then
+    print("Error loading OrionLibrary: " .. err)
 end
 
 local Window = OrionLib:MakeWindow({Name = "Vico Hub (Just Noob)", IntroText = "Vico Hub", HidePremium = false})

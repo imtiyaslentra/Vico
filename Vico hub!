@@ -46,30 +46,47 @@ if idgaf_mode then
     spamBall.Parent = SpamFolder 
 
     -- GUI menggunakan Orion Library
-    local Window = OrionLib:MakeWindow({Name = "Vico Hub", HidePremium = true})
+    local Window = OrionLib:MakeWindow({
+        Name = "Vico Hub", 
+        HidePremium = false, 
+        SaveConfig = true, 
+        ConfigFolder = "OrionTest"
+    })
 
-    -- Membuat tab untuk Toggle
+    -- Membuat tab untuk Auto Controls
     local ToggleTab = Window:MakeTab({
         Name = "Main",
         Icon = "rbxassetid://4483345998", -- Ganti dengan ID ikon sesuai kebutuhan
-        Premium = false
+        PremiumOnly = false
     })
 
-    -- Toggle untuk AutoParry
+    -- Menambahkan Toggle untuk AutoParry
     ToggleTab:AddToggle({
         Name = "AutoParry",
         Default = false,
         Callback = function(Value)
             canParry = Value
+            OrionLib:MakeNotification({
+                Name = "AutoParry Status",
+                Content = "AutoParry is now " .. (Value and "enabled" or "disabled"),
+                Image = "rbxassetid://4483345998",
+                Time = 5
+            })
         end
     })
 
-    -- Toggle untuk AutoSpam
+    -- Menambahkan Toggle untuk AutoSpam
     ToggleTab:AddToggle({
         Name = "AutoSpam",
         Default = false,
         Callback = function(Value)
             canSpam = Value
+            OrionLib:MakeNotification({
+                Name = "AutoSpam Status",
+                Content = "AutoSpam is now " .. (Value and "enabled" or "disabled"),
+                Image = "rbxassetid://4483345998",
+                Time = 5
+            })
         end
     })
 
@@ -133,5 +150,3 @@ if idgaf_mode then
         end
     end)
 end
-
-OrionLib:Init()

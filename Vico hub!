@@ -1,3 +1,4 @@
+-- Mendapatkan semua service yang diperlukan
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
@@ -7,50 +8,20 @@ local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shl
 
 local player = Players.LocalPlayer
 local canParry = true
-local canSpam = false
-local Titan_blade = false
-local Predict_parry = true
-local Parry_mode = "pro hard"
-local parry_method = "Firesignal"
-local config_1 = BallFolder()
-local config_2 = SpamFolder()
-local calculate_1_2 = true
-local autofarm = false
-local ai_play = false
-local ai_farm_rage = false
-local no_delay = false
-local ai_chat = false
-local afk_mode = false
-local idgaf_mode = true
-local skid_fade = false,
-if idgaf_mode is true
-then
-do
-local skid_fade = true
-local skid_pastebin = true
+local autoParryEnabled = false -- Menyimpan status toggle auto-parry
+local autoSpamEnabled = false  -- Menyimpan status toggle auto-spam
 
-local Window = OrionLib:MakeWindow({Name = "Vico", HidePremium = false, SaveConfig = true, ConfigFolder = "OrionTest"})
-OrionLib:MakeNotification({
-	Name = "Title!",
-	Content = "Notification content... what will it say??",
-	Image = "rbxassetid://4483345998",
-	Time = 5
-})
+-- Membuat window Orion
+local Window = OrionLib:MakeWindow({Name = "AutoParry & AutoSpam", HidePremium = false, SaveConfig = true, ConfigFolder = "OrionTest"})
 
+-- Membuat tab Auto Features di dalam window
 local Tab = Window:MakeTab({
-	Name = "Main",
-	Icon = "rbxassetid://4483345998",
-	PremiumOnly = false
+    Name = "Auto Features",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
 })
 
-Tab:AddToggle({
-	Name = "Autoparry",
-	Default = false,
-	Callback = function(Value)
-		canParry(Value)
-	end    
-})
-
+-- Fungsi menghitung waktu prediksi bola mencapai pemain
 local function calculatePredictionTime(ball)
     local character = player.Character
     if character then
@@ -70,6 +41,7 @@ local function calculatePredictionTime(ball)
     return math.huge 
 end
 
+-- Fungsi untuk melakukan parry
 local function parry()
     if canParry then
         canParry = false
@@ -77,30 +49,107 @@ local function parry()
         VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
         
         task.delay(0.1, function()
-            print("parried by using calculater at https://frostware.raw/caculate_bladeball.com")
+            print("Parried successfully!")
             canParry = true
         end)
     end
 end
 
-local function checkProximityToPlayer(ball)
-local predictionTime = calculatePredictionTime(ball)
-local realBallAttribute = ball:GetAttribute("realBall")
-local target = ball:GetAttribute("target")
+-- Fungsi untuk mendapatkan bola terdekat berdasarkan waktu prediksi
+local function getClosestEntity()
+    local closestEntity = nil
+    local closestDistance = math.huge
+    
+    for _, ball in ipairs(BallFolder:GetChildren()) do
+        local realBallAttribute = ball:GetAttribute("realBall")
+        local target = ball:GetAttribute("target")
+        
+        -- Pastikan bola memiliki atribut yang benar
+        if realBallAttribute ~= nil and target ~= nil then
+            -- Pastikan bola menargetkan pemain lokal
+            if target == player.Name then
+                local predictionTime = calculatePredictionTime(ball)
+                if predictionTime and predictionTime < closestDistance then
+                    closestDistance = predictionTime
+                    closestEntity = ball
+                end
+            end
+        else
+            print("Ball missing necessary attributes (realBall or target)")
+        end
+    end
+    
+    return closestEntity, closestDistance
+end
 
-    if predictionTime and realBallAttribute and target then
-        if target == player.Name then
-            local ballSpeedThreshold = math.max(0.4, 0.6 - ball.Velocity.Magnitude * 0.03)
-
+-- Fungsi untuk auto-parry
+local function autoParry()
+    if autoParryEnabled then
+        local closestBall, predictionTime = getClosestEntity()
+    
+        if closestBall and predictionTime then
+            local ballSpeedThreshold = math.max(0.4, 0.6 - closestBall.Velocity.Magnitude * 0.03)
+            
             if predictionTime <= ballSpeedThreshold then
                 parry()
             end
+        else
+            print("No valid ball found for parry or prediction time too long")
         end
     end
 end
-              
+
+-- Fungsi untuk auto-spam (melakukan aksi secara berulang, misalnya klik mouse)
+local function autoSpam()
+    if autoSpamEnabled then
+        -- AutoSpam logika untuk klik berulang atau aksi lain
+        if canParry then
+            VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
+            VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
+            print("AutoSpam action triggered")
+        end
+    end
+end
+
+-- Menghubungkan auto-parry dengan Heartbeat (mengecek bola setiap frame)
 RunService.Heartbeat:Connect(function()
-    checkBallsProximity()
+    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+        autoParry()
+    else
+        print("Character or HumanoidRootPart not found")
+    end
 end)
 
+-- Menggunakan BindToRenderStep untuk AutoSpam, dengan prioritas sebelum input pengguna
+RunService:BindToRenderStep("PreAutoSpam", Enum.RenderPriority.Input.Value - 1, autoSpam)
+
+-- Menambahkan toggle AutoParry ke dalam tab
+Tab:AddToggle({
+    Name = "Enable AutoParry",
+    Default = false,
+    Callback = function(Value)
+        autoParryEnabled = Value
+        if Value then
+            print("AutoParry Enabled")
+        else
+            print("AutoParry Disabled")
+        end
+    end    
+})
+
+-- Menambahkan toggle AutoSpam ke dalam tab
+Tab:AddToggle({
+    Name = "Enable AutoSpam",
+    Default = false,
+    Callback = function(Value)
+        autoSpamEnabled = Value
+        if Value then
+            print("AutoSpam Enabled")
+        else
+            print("AutoSpam Disabled")
+        end
+    end    
+})
+
+-- Menampilkan GUI Orion
 OrionLib:Init()

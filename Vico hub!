@@ -13,7 +13,9 @@ Tab:AddToggle({
     Name = "Auto Parry",
     Default = false,
     Callback = function(state)
+        -- Mengatur status parry
         canParry = state
+        
         if state then
             print("Auto Parry Enabled")
             OrionLib:MakeNotification({
@@ -21,6 +23,13 @@ Tab:AddToggle({
                 Content = "Auto Parry has been enabled.",
                 Time = 5
             })
+
+            RunService.Heartbeat:Connect(function()
+                for _, ball in ipairs(BallFolder:GetChildren()) do
+                    checkProximityToPlayer(ball)
+                end
+            end)
+
         else
             print("Auto Parry Disabled")
             OrionLib:MakeNotification({
@@ -28,6 +37,7 @@ Tab:AddToggle({
                 Content = "Auto Parry has been disabled.",
                 Time = 5
             })
+            
         end
     end
 })

@@ -19,8 +19,8 @@ local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shl
     ToggleTab:AddToggle({
         Name = "AutoParry",
         Default = false,
-        Callback = function(Value)
-            canParry = Value
+        Callback = function(state)
+            canParry = state
             OrionLib:MakeNotification({
                 Name = "AutoParry Status",
                 Content = "AutoParry is now " .. (Value and "enabled" or "disabled"),
@@ -34,8 +34,8 @@ local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shl
     ToggleTab:AddToggle({
         Name = "AutoSpam",
         Default = false,
-        Callback = function(Value)
-            canSpam = Value
+        Callback = function(state)
+            canSpam = state
             OrionLib:MakeNotification({
                 Name = "AutoSpam Status",
                 Content = "AutoSpam is now " .. (Value and "enabled" or "disabled"),
@@ -45,7 +45,7 @@ local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shl
         end
     })
 
-    local RunService = game:GetService("RunService")
+local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 local VirtualInputManager = game:GetService("VirtualInputManager")

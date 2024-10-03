@@ -1,4 +1,4 @@
--- Mendapatkan semua service yang diperlukan
+-- Mendapatkan service dan variabel
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
@@ -8,18 +8,12 @@ local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shl
 
 local player = Players.LocalPlayer
 local canParry = true
-local autoParryEnabled = false -- Menyimpan status toggle auto-parry
-local autoSpamEnabled = false  -- Menyimpan status toggle auto-spam
+local autoParryEnabled = false
+local autoSpamEnabled = false
 
--- Membuat window Orion
-local Window = OrionLib:MakeWindow({Name = "AutoParry & AutoSpam", HidePremium = false, SaveConfig = true, ConfigFolder = "OrionTest"})
-
--- Membuat tab Auto Features di dalam window
-local Tab = Window:MakeTab({
-    Name = "Auto Features",
-    Icon = "rbxassetid://4483345998",
-    PremiumOnly = false
-})
+-- Latency (Ping) handling untuk AutoParry
+local ping = game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValueString()
+local adjustedPing = tonumber(ping:match("%d+")) / 1000 -- Mengkonversi ping ke detik
 
 -- Fungsi menghitung waktu prediksi bola mencapai pemain
 local function calculatePredictionTime(ball)
@@ -27,91 +21,124 @@ local function calculatePredictionTime(ball)
     if character then
         local rootPart = character:FindFirstChild("HumanoidRootPart")
         if rootPart then
-            local relativePosition = ball.Position - rootPart.Position
-            local relativeVelocity = ball.Velocity
-
-            local distance = relativePosition.Magnitude
-            local speed = relativeVelocity.Magnitude
-
-            if speed > 0 then      
-                return distance / speed
+            local distance = (ball.Position - rootPart.Position).Magnitude
+            local speed = ball.Velocity.Magnitude
+            if speed > 0 then
+                local predictionTime = (distance / speed) - adjustedPing
+                return predictionTime > 0 and predictionTime or math.huge -- Hindari nilai negatif
             end
         end
     end
-    return math.huge 
+    return math.huge
 end
 
--- Fungsi untuk melakukan parry
+-- Fungsi untuk mendeteksi pemain terdekat
+local function getClosestPlayer()
+    local closestPlayer = nil
+    local closestDistance = math.huge
+    local myCharacter = player.Character
+    if myCharacter then
+        local myRootPart = myCharacter:FindFirstChild("HumanoidRootPart")
+        if myRootPart then
+            for _, otherPlayer in ipairs(Players:GetPlayers()) do
+                if otherPlayer ~= player and otherPlayer.Character then
+                    local otherRootPart = otherPlayer.Character:FindFirstChild("HumanoidRootPart")
+                    if otherRootPart then
+                        local distance = (myRootPart.Position - otherRootPart.Position).Magnitude
+                        if distance < 50 then -- Anggap 50 sebagai jarak "sangat dekat"
+                            if distance < closestDistance then
+                                closestDistance = distance
+                                closestPlayer = otherPlayer
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+    return closestPlayer
+end
+
+-- Fungsi deteksi bola terdekat (untuk AutoParry)
+local function getClosestEntity()
+    local closestBall, closestDistance = nil, math.huge
+    for _, ball in ipairs(BallFolder:GetChildren()) do
+        if ball:GetAttribute("realBall") and ball:GetAttribute("target") == player.Name then
+            local predictionTime = calculatePredictionTime(ball)
+            if predictionTime < closestDistance then
+                closestBall, closestDistance = ball, predictionTime
+            end
+        end
+    end
+    return closestBall, closestDistance
+end
+
+-- Fungsi deteksi bola untuk AutoSpam, mempertimbangkan pemain terdekat
+local function getSpamBall()
+    local closestPlayer = getClosestPlayer()
+    local targetRelevantBall = nil
+    local myName = player.Name
+    
+    for _, ball in ipairs(BallFolder:GetChildren()) do
+        local target = ball:GetAttribute("target")
+        local realBall = ball:GetAttribute("realBall")
+        
+        -- Hanya deteksi bola yang menargetkan pemain atau pemain terdekat
+        if realBall and (target == myName or (closestPlayer and target == closestPlayer.Name)) then
+            -- Anti-Stop: bola yang tiba-tiba berhenti tidak dianggap valid
+            local ballSpeed = ball.Velocity.Magnitude
+            if ballSpeed > 1 then -- Anggap kecepatan <1 sebagai bola berhenti
+                -- AutoCurve Detection: cek perubahan drastis dalam kecepatan
+                local curveDetected = ballSpeed < 10 -- Jika kecepatan bola sangat rendah, anggap curve
+                if not curveDetected then
+                    targetRelevantBall = ball
+                    break -- Temukan satu bola yang valid dan hentikan pencarian
+                else
+                    print("Curve detected, ignoring ball")
+                end
+            else
+                print("Ball stopped, ignoring")
+            end
+        end
+    end
+    return targetRelevantBall
+end
+
+-- Fungsi AutoSpam terpisah dari AutoParry
+local function autoSpam()
+    if autoSpamEnabled then
+        local ball = getSpamBall()
+        if ball and canParry then
+            -- Hanya spam jika bola valid ditemukan
+            VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
+            VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
+            print("AutoSpam triggered!")
+        end
+    end
+end
+
+-- Fungsi AutoParry dengan Ping dan jarak
+local function autoParry()
+    if autoParryEnabled then
+        local closestBall, predictionTime = getClosestEntity()
+        if closestBall and predictionTime <= math.max(0.4, 0.6 - closestBall.Velocity.Magnitude * 0.03) then
+            parry()
+        end
+    end
+end
+
+-- Fungsi Parry untuk AutoParry
 local function parry()
     if canParry then
         canParry = false
         VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
         VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
-        
-        task.delay(0.1, function()
-            print("Parried successfully!")
-            canParry = true
-        end)
+        task.delay(0.1, function() canParry = true end)
+        print("Parried!")
     end
 end
 
--- Fungsi untuk mendapatkan bola terdekat berdasarkan waktu prediksi
-local function getClosestEntity()
-    local closestEntity = nil
-    local closestDistance = math.huge
-    
-    for _, ball in ipairs(BallFolder:GetChildren()) do
-        local realBallAttribute = ball:GetAttribute("realBall")
-        local target = ball:GetAttribute("target")
-        
-        -- Pastikan bola memiliki atribut yang benar
-        if realBallAttribute ~= nil and target ~= nil then
-            -- Pastikan bola menargetkan pemain lokal
-            if target == player.Name then
-                local predictionTime = calculatePredictionTime(ball)
-                if predictionTime and predictionTime < closestDistance then
-                    closestDistance = predictionTime
-                    closestEntity = ball
-                end
-            end
-        else
-            print("Ball missing necessary attributes (realBall or target)")
-        end
-    end
-    
-    return closestEntity, closestDistance
-end
-
--- Fungsi untuk auto-parry
-local function autoParry()
-    if autoParryEnabled then
-        local closestBall, predictionTime = getClosestEntity()
-    
-        if closestBall and predictionTime then
-            local ballSpeedThreshold = math.max(0.4, 0.6 - closestBall.Velocity.Magnitude * 0.03)
-            
-            if predictionTime <= ballSpeedThreshold then
-                parry()
-            end
-        else
-            print("No valid ball found for parry or prediction time too long")
-        end
-    end
-end
-
--- Fungsi untuk auto-spam (melakukan aksi secara berulang, misalnya klik mouse)
-local function autoSpam()
-    if autoSpamEnabled then
-        -- AutoSpam logika untuk klik berulang atau aksi lain
-        if canParry then
-            VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
-            VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
-            print("AutoSpam action triggered")
-        end
-    end
-end
-
--- Menghubungkan auto-parry dengan Heartbeat (mengecek bola setiap frame)
+-- Panggilan fungsi AutoParry setiap frame
 RunService.Heartbeat:Connect(function()
     if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
         autoParry()
@@ -120,10 +147,14 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 
--- Menggunakan BindToRenderStep untuk AutoSpam, dengan prioritas sebelum input pengguna
+-- Panggilan fungsi AutoSpam
 RunService:BindToRenderStep("PreAutoSpam", Enum.RenderPriority.Input.Value - 1, autoSpam)
 
--- Menambahkan toggle AutoParry ke dalam tab
+-- GUI menggunakan OrionLib
+local Window = OrionLib:MakeWindow({Name = "AutoParry & AutoSpam", HidePremium = false, SaveConfig = true, ConfigFolder = "OrionTest"})
+local Tab = Window:MakeTab({Name = "Auto Features", Icon = "rbxassetid://4483345998", PremiumOnly = false})
+
+-- Toggle AutoParry
 Tab:AddToggle({
     Name = "Enable AutoParry",
     Default = false,
@@ -137,7 +168,7 @@ Tab:AddToggle({
     end    
 })
 
--- Menambahkan toggle AutoSpam ke dalam tab
+-- Toggle AutoSpam
 Tab:AddToggle({
     Name = "Enable AutoSpam",
     Default = false,
@@ -151,5 +182,4 @@ Tab:AddToggle({
     end    
 })
 
--- Menampilkan GUI Orion
 OrionLib:Init()

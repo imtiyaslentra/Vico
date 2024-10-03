@@ -1,56 +1,9 @@
-local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
-
-    -- GUI menggunakan Orion Library
-    local Window = OrionLib:MakeWindow({
-        Name = "Vico Hub", 
-        HidePremium = false, 
-        SaveConfig = true, 
-        ConfigFolder = "OrionTest"
-    })
-
-    -- Membuat tab untuk Auto Controls
-    local ToggleTab = Window:MakeTab({
-        Name = "Main",
-        Icon = "rbxassetid://4483345998", -- Ganti dengan ID ikon sesuai kebutuhan
-        PremiumOnly = false
-    })
-
-    -- Menambahkan Toggle untuk AutoParry
-    ToggleTab:AddToggle({
-        Name = "AutoParry",
-        Default = false,
-        Callback = function(state)
-            canParry = state
-            OrionLib:MakeNotification({
-                Name = "AutoParry Status",
-                Content = "AutoParry is now " .. (Value and "enabled" or "disabled"),
-                Image = "rbxassetid://4483345998",
-                Time = 5
-            })
-        end
-    })
-
-    -- Menambahkan Toggle untuk AutoSpam
-    ToggleTab:AddToggle({
-        Name = "AutoSpam",
-        Default = false,
-        Callback = function(state)
-            canSpam = state
-            OrionLib:MakeNotification({
-                Name = "AutoSpam Status",
-                Content = "AutoSpam is now " .. (Value and "enabled" or "disabled"),
-                Image = "rbxassetid://4483345998",
-                Time = 5
-            })
-        end
-    })
-
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 local VirtualInputManager = game:GetService("VirtualInputManager")
 local BallFolder = Workspace:WaitForChild("Balls")
-
+local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
 
 local player = Players.LocalPlayer
 local canParry = true
@@ -75,6 +28,28 @@ then
 do
 local skid_fade = true
 local skid_pastebin = true
+
+local Window = OrionLib:MakeWindow({Name = "Vico", HidePremium = false, SaveConfig = true, ConfigFolder = "OrionTest"})
+OrionLib:MakeNotification({
+	Name = "Title!",
+	Content = "Notification content... what will it say??",
+	Image = "rbxassetid://4483345998",
+	Time = 5
+})
+
+local Tab = Window:MakeTab({
+	Name = "Main",
+	Icon = "rbxassetid://4483345998",
+	PremiumOnly = false
+})
+
+Tab:AddToggle({
+	Name = "Autoparry",
+	Default = false,
+	Callback = function(Value)
+		canParry(Value)
+	end    
+})
 
 local function calculatePredictionTime(ball)
     local character = player.Character

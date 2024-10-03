@@ -1,77 +1,9 @@
--- Membuat jendela untuk OrionLib
-local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Orion/main/source"))()
-local Window = OrionLib:MakeWindow({Name = "Vico Hub | Integrated", IntroText = "Vico Noob", HidePremium = false})
-
-local Tab = Window:MakeTab({
-	Name = "Main",
-	Icon = "rbxassetid://4483345998",
-	PremiumOnly = false
-})
-
--- Toggle untuk AutoParry
-Tab:AddToggle({
-    Name = "Auto Parry",
-    Default = false,
-    Callback = function(state)
-        -- Mengatur status parry
-        canParry = state
-        
-        if state then
-            print("Auto Parry Enabled")
-            OrionLib:MakeNotification({
-                Name = "Auto Parry",
-                Content = "Auto Parry has been enabled.",
-                Time = 5
-            })
-
-            RunService.Heartbeat:Connect(function()
-                for _, ball in ipairs(BallFolder:GetChildren()) do
-                    checkProximityToPlayer(ball)
-                end
-            end)
-
-        else
-            print("Auto Parry Disabled")
-            OrionLib:MakeNotification({
-                Name = "Auto Parry",
-                Content = "Auto Parry has been disabled.",
-                Time = 5
-            })
-            
-        end
-    end
-})
-
--- Toggle untuk AutoSpam
-Tab:AddToggle({
-    Name = "Auto Spam (In Progress)",
-    Default = false,
-    Callback = function(state)
-        canSpam = state
-        if state then
-            print("Auto Spam Enabled")
-            OrionLib:MakeNotification({
-                Name = "Auto Spam",
-                Content = "Auto Spam has been enabled.",
-                Time = 5
-            })
-        else
-            print("Auto Spam Disabled")
-            OrionLib:MakeNotification({
-                Name = "Auto Spam",
-                Content = "Auto Spam has been disabled.",
-                Time = 5
-            })
-        end
-    end
-})
-
- local RunService = game:GetService("RunService")
+local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 local VirtualInputManager = game:GetService("VirtualInputManager")
 local BallFolder = Workspace:WaitForChild("Balls")
-
+local OrionLib = loadstring(game:HttpGet('https://raw.githubusercontent.com/shlexware/Orion/main/source.lua'))()
 
 local player = Players.LocalPlayer
 local canParry = true
@@ -80,9 +12,6 @@ local Titan_blade = false
 local Predict_parry = true
 local Parry_mode = "pro hard"
 local parry_method = "Firesignal"
-local config_1 = BallFolder()
-local config_2 = SpamFolder()
-local calculate_1_2 = true
 local autofarm = false
 local ai_play = false
 local ai_farm_rage = false
@@ -90,12 +19,31 @@ local no_delay = false
 local ai_chat = false
 local afk_mode = false
 local idgaf_mode = true
-local skid_fade = false,
-if idgaf_mode is true
-then
-do
-local skid_fade = true
-local skid_pastebin = true
+local skid_fade = false
+
+-- Membuat GUI dengan Orion Library
+local window = OrionLib:MakeWindow({
+    Name = "Vico Hub",
+    HidePremium = false,
+    IntroText = "Vico Newbie",
+    SaveConfig = true,
+    ConfigFolder = "OrionTest"
+})
+
+-- Membuat tab dan toggle untuk AutoParry
+local mainTab = window:MakeTab({
+    Name = "Main",
+    Icon = "rbxassetid://4483345998", -- Ganti dengan ID ikon yang sesuai
+    PremiumOnly = false
+})
+
+mainTab:AddToggle({
+    Name = "AutoParry",
+    Default = false,
+    Callback = function(value)
+        canParry = value
+    end
+})
 
 local function calculatePredictionTime(ball)
     local character = player.Character
@@ -123,16 +71,16 @@ local function parry()
         VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
         
         task.delay(0.1, function()
-            print("parried by using calculater at https://frostware.raw/caculate_bladeball.com")
+            print("Parried successfully!")
             canParry = true
         end)
     end
 end
 
 local function checkProximityToPlayer(ball)
-local predictionTime = calculatePredictionTime(ball)
-local realBallAttribute = ball:GetAttribute("realBall")
-local target = ball:GetAttribute("target")
+    local predictionTime = calculatePredictionTime(ball)
+    local realBallAttribute = ball:GetAttribute("realBall")
+    local target = ball:GetAttribute("target")
 
     if predictionTime and realBallAttribute and target then
         if target == player.Name then
@@ -144,9 +92,15 @@ local target = ball:GetAttribute("target")
         end
     end
 end
-              
+
+-- Menghubungkan fungsi ke event Heartbeat
 RunService.Heartbeat:Connect(function()
-    checkBallsProximity()
+    for _, ball in pairs(BallFolder:GetChildren()) do
+        if ball:IsA("Ball") then -- Pastikan bahwa objek adalah bola
+            checkProximityToPlayer(ball)
+        end
+    end
 end)
 
+-- Menampilkan GUI
 OrionLib:Init()

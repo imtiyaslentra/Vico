@@ -66,21 +66,37 @@ Tab:AddToggle({
     end
 })
 
-local RunService = game:GetService("RunService")
+ local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 local VirtualInputManager = game:GetService("VirtualInputManager")
 local BallFolder = Workspace:WaitForChild("Balls")
 
+
 local player = Players.LocalPlayer
 local canParry = true
+local canSpam = false
+local Titan_blade = false
+local Predict_parry = true
+local Parry_mode = "pro hard"
+local parry_method = "Firesignal"
+local config_1 = BallFolder()
+local config_2 = SpamFolder()
+local calculate_1_2 = true
+local autofarm = false
+local ai_play = false
+local ai_farm_rage = false
+local no_delay = false
+local ai_chat = false
+local afk_mode = false
+local idgaf_mode = true
+local skid_fade = false,
+if idgaf_mode is true
+then
+do
+local skid_fade = true
+local skid_pastebin = true
 
--- Konfigurasi optimal parry
-local predictionMultiplier = 0.8  -- Adjust ini untuk mengoptimalkan prediksi
-local maxParryDistance = 50  -- Maksimal jarak untuk parry
-local ballAccelerationThreshold = 0.5  -- Threshold untuk akselerasi bola
-
--- Fungsi untuk menghitung waktu prediksi yang lebih presisi
 local function calculatePredictionTime(ball)
     local character = player.Character
     if character then
@@ -92,24 +108,12 @@ local function calculatePredictionTime(ball)
             local distance = relativePosition.Magnitude
             local speed = relativeVelocity.Magnitude
 
-            if speed > 0 then
-                local predictedTime = distance / speed * predictionMultiplier  -- Optimasi dengan pengali prediksi
-                return predictedTime, distance, speed
+            if speed > 0 then      
+                return distance / speed
             end
         end
     end
-    return math.huge, math.huge, 0  -- Jika bola diam atau tidak ada kecepatan
-end
-
--- Fungsi baru untuk mendeteksi arah bola dan akselerasinya
-local function detectBallAcceleration(ball)
-    local lastVelocity = ball:GetAttribute("lastVelocity") or Vector3.new(0, 0, 0)
-    local currentVelocity = ball.Velocity
-
-    local acceleration = (currentVelocity - lastVelocity).Magnitude / RunService.Heartbeat:Wait()
-    ball:SetAttribute("lastVelocity", currentVelocity)
-
-    return acceleration
+    return math.huge 
 end
 
 local function parry()
@@ -119,36 +123,30 @@ local function parry()
         VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
         
         task.delay(0.1, function()
-            print("parried successfully")
+            print("parried by using calculater at https://frostware.raw/caculate_bladeball.com")
             canParry = true
         end)
     end
 end
 
--- Optimalisasi checkProximityToPlayer dengan tambahan parameter kecepatan dan akselerasi
 local function checkProximityToPlayer(ball)
-    local predictionTime, distance, speed = calculatePredictionTime(ball)
-    local acceleration = detectBallAcceleration(ball)
-    local realBallAttribute = ball:GetAttribute("realBall")
-    local target = ball:GetAttribute("target")
+local predictionTime = calculatePredictionTime(ball)
+local realBallAttribute = ball:GetAttribute("realBall")
+local target = ball:GetAttribute("target")
 
-    if realBallAttribute and target == player.Name then
-        local ballSpeedThreshold = math.max(0.4, 0.6 - speed * 0.03)
-        local withinParryRange = distance <= maxParryDistance
-        local accelerationCheck = acceleration <= ballAccelerationThreshold
+    if predictionTime and realBallAttribute and target then
+        if target == player.Name then
+            local ballSpeedThreshold = math.max(0.4, 0.6 - ball.Velocity.Magnitude * 0.03)
 
-        -- Hanya lakukan parry jika waktu prediksi, jarak, dan akselerasi memenuhi syarat
-        if predictionTime <= ballSpeedThreshold and withinParryRange and accelerationCheck then
-            parry()
+            if predictionTime <= ballSpeedThreshold then
+                parry()
+            end
         end
     end
 end
-
--- Heartbeat untuk terus memantau bola
+              
 RunService.Heartbeat:Connect(function()
-    for _, ball in ipairs(BallFolder:GetChildren()) do
-        checkProximityToPlayer(ball)
-    end
+    checkBallsProximity()
 end)
 
 OrionLib:Init()

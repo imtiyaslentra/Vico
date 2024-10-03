@@ -1,49 +1,4 @@
-local RunService = game:GetService("RunService")
-local Players = game:GetService("Players")
-local Workspace = game:GetService("Workspace")
-local VirtualInputManager = game:GetService("VirtualInputManager")
-local BallFolder = Workspace:WaitForChild("Balls")
-local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Orion/main/source"))() -- Memuat Orion Library
-
--- Membuat folder baru untuk spam
-local SpamFolder = Instance.new("Folder") 
-SpamFolder.Name = "SpamFolder" 
-SpamFolder.Parent = Workspace 
-
-local player = Players.LocalPlayer
-local canParry = true
-local canSpam = false
-local Titan_blade = false
-local Predict_parry = true
-local Parry_mode = "pro hard"
-local parry_method = "Firesignal"
-local config_1 = BallFolder 
-local config_2 = SpamFolder 
-local calculate_1_2 = true
-local autofarm = false
-local ai_play = false
-local ai_farm_rage = false
-local no_delay = false
-local ai_chat = false
-local afk_mode = false
-local idgaf_mode = true
-local skid_fade = false
-
-if idgaf_mode then
-    skid_fade = true
-    local skid_pastebin = true
-
-    -- Menyimpan objek spam dan pengaturan di dalam SpamFolder
-    local spamSpeed = Instance.new("IntValue")
-    spamSpeed.Name = "SpamSpeed"
-    spamSpeed.Value = 5 -- Kecepatan spam
-    spamSpeed.Parent = SpamFolder 
-
-    local spamBall = Instance.new("Part") -- Membuat objek baru untuk spam
-    spamBall.Name = "SpamBall"
-    spamBall.Size = Vector3.new(1, 1, 1) 
-    spamBall.Position = Vector3.new(0, 50, 0) 
-    spamBall.Parent = SpamFolder 
+local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
 
     -- GUI menggunakan Orion Library
     local Window = OrionLib:MakeWindow({
@@ -90,63 +45,87 @@ if idgaf_mode then
         end
     })
 
-    local function calculatePredictionTime(ball)
-        local character = player.Character
-        if character then
-            local rootPart = character:FindFirstChild("HumanoidRootPart")
-            if rootPart then
-                local relativePosition = ball.Position - rootPart.Position
-                local relativeVelocity = ball.Velocity
+    local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+local VirtualInputManager = game:GetService("VirtualInputManager")
+local BallFolder = Workspace:WaitForChild("Balls")
 
-                local distance = relativePosition.Magnitude
-                local speed = relativeVelocity.Magnitude
 
-                if speed > 0 then      
-                    return distance / speed
-                end
+local player = Players.LocalPlayer
+local canParry = true
+local canSpam = false
+local Titan_blade = false
+local Predict_parry = true
+local Parry_mode = "pro hard"
+local parry_method = "Firesignal"
+local config_1 = BallFolder()
+local config_2 = SpamFolder()
+local calculate_1_2 = true
+local autofarm = false
+local ai_play = false
+local ai_farm_rage = false
+local no_delay = false
+local ai_chat = false
+local afk_mode = false
+local idgaf_mode = true
+local skid_fade = false,
+if idgaf_mode is true
+then
+do
+local skid_fade = true
+local skid_pastebin = true
+
+local function calculatePredictionTime(ball)
+    local character = player.Character
+    if character then
+        local rootPart = character:FindFirstChild("HumanoidRootPart")
+        if rootPart then
+            local relativePosition = ball.Position - rootPart.Position
+            local relativeVelocity = ball.Velocity
+
+            local distance = relativePosition.Magnitude
+            local speed = relativeVelocity.Magnitude
+
+            if speed > 0 then      
+                return distance / speed
             end
         end
-        return math.huge 
     end
-
-    local function parry()
-        if canParry then
-            canParry = false
-            VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
-            VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
-
-            task.delay(0.1, function()
-                print("Parried successfully using calculator at https://frostware.raw/calculate_bladeball.com")
-                canParry = true
-            end)
-        end
-    end
-
-    local function checkProximityToPlayer(ball)
-        local predictionTime = calculatePredictionTime(ball)
-        local realBallAttribute = ball:GetAttribute("realBall")
-        local target = ball:GetAttribute("target")
-
-        if predictionTime and realBallAttribute and target then
-            if target == player.Name then
-                local ballSpeedThreshold = math.max(0.4, 0.6 - ball.Velocity.Magnitude * 0.03)
-
-                if predictionTime <= ballSpeedThreshold then
-                    parry()
-                end
-            end
-        end
-    end
-
-    -- Menambahkan event Heartbeat untuk memeriksa semua bola
-    RunService.Heartbeat:Connect(function()
-        for _, ball in pairs(BallFolder:GetChildren()) do
-            if ball:IsA("Ball") then -- Pastikan objek adalah bola
-                checkProximityToPlayer(ball)
-                if canSpam then
-                    -- Tambahkan logika untuk AutoSpam di sini jika diperlukan
-                end
-            end
-        end
-    end)
+    return math.huge 
 end
+
+local function parry()
+    if canParry then
+        canParry = false
+        VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
+        VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
+        
+        task.delay(0.1, function()
+            print("parried by using calculater at https://frostware.raw/caculate_bladeball.com")
+            canParry = true
+        end)
+    end
+end
+
+local function checkProximityToPlayer(ball)
+local predictionTime = calculatePredictionTime(ball)
+local realBallAttribute = ball:GetAttribute("realBall")
+local target = ball:GetAttribute("target")
+
+    if predictionTime and realBallAttribute and target then
+        if target == player.Name then
+            local ballSpeedThreshold = math.max(0.4, 0.6 - ball.Velocity.Magnitude * 0.03)
+
+            if predictionTime <= ballSpeedThreshold then
+                parry()
+            end
+        end
+    end
+end
+              
+RunService.Heartbeat:Connect(function()
+    checkBallsProximity()
+end)
+
+OrionLib:Init()

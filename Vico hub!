@@ -1,15 +1,63 @@
---[[ for toggle buttons value to make it work.
+-- Pastikan OrionLib dimuat
+local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
 
-Section:CreateToggle("Auto Parry", function(toggled) -- must be the same value as the toggles below
+-- Membuat jendela utama di OrionLibrary
+local Window = OrionLib:MakeWindow({Name = "Auto Parry GUI", HidePremium = false, SaveConfig = true, ConfigFolder = "OrionTest"})
 
-              resolve_parry_Remote()
-        getgenv().aura_Enabled = toggled -- the value to make the parry work
+-- Membuat Tab di dalam jendela
+local Tab = Window:MakeTab({
+    Name = "Main",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
 
-print(toggled) -- optional
+-- Membuat Section untuk Auto Parry
+local Section = Tab:AddSection({
+    Name = "Auto Parry"
+})
+
+-- Fungsi resolve_parry_Remote (sesuai kode Anda)
+local function resolve_parry_Remote()
+    for _, service in pairs({game:GetService("AdService"), game:GetService("SocialService")}) do
+        local temp_remote = service:FindFirstChildOfClass("RemoteEvent")
+        if temp_remote and temp_remote.Name:find("\n") then
+            parry_remote = temp_remote
+            break
+        end
+    end
+end
+
+-- Menambahkan Toggle untuk Auto Parry di dalam Section, sesuai format Anda
+Section:CreateToggle("Auto Parry", function(toggled) 
+    -- Panggil resolve_parry_Remote saat toggle berubah
+    resolve_parry_Remote()
+
+    -- Menyetel nilai aura_Enabled sesuai status toggle
+    getgenv().aura_Enabled = toggled
+
+    -- Cetak status jika diinginkan (opsional)
+    print(toggled)
 end)
 
+-- Tambahkan toggle Night Mode
+Tab:AddToggle({
+    Name = "Night Mode",
+    Default = false,
+    Callback = function(value)
+        getgenv().night_mode_Enabled = value
+        print("Night Mode: " .. tostring(value))
+    end    
+})
 
-]]--
+-- Tambahkan toggle Trail Effect
+Tab:AddToggle({
+    Name = "Trail Effect",
+    Default = false,
+    Callback = function(value)
+        getgenv().trail_Enabled = value
+        print("Trail Effect: " .. tostring(value))
+    end    
+})
 
 local Stats = game:GetService("Stats")
 local Players = game:GetService("Players")
@@ -210,4 +258,4 @@ end)
 initialize("venox_temp")
 resolve_parry_Remote()
 
---[[ Remaked by Fsploit / Recoded ]]--
+OrionLib:Init()

@@ -1,62 +1,30 @@
--- Pastikan OrionLib dimuat
+-- Memuat OrionLibrary
 local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
 
--- Membuat jendela utama di OrionLibrary
+-- Membuat jendela utama
 local Window = OrionLib:MakeWindow({Name = "Auto Parry GUI", HidePremium = false, SaveConfig = true, ConfigFolder = "OrionTest"})
 
 -- Membuat Tab di dalam jendela
 local Tab = Window:MakeTab({
     Name = "Main",
-    Icon = "rbxassetid://4483345998",
+    Icon = "rbxassetid://4483345998", -- Anda bisa mengganti dengan ID ikon lain
     PremiumOnly = false
 })
 
 -- Membuat Section untuk Auto Parry
 local Section = Tab:AddSection({
-    Name = "Auto Parry"
+    Name = "Auto Parry Settings"
 })
-
--- Fungsi resolve_parry_Remote (sesuai kode Anda)
-local function resolve_parry_Remote()
-    for _, service in pairs({game:GetService("AdService"), game:GetService("SocialService")}) do
-        local temp_remote = service:FindFirstChildOfClass("RemoteEvent")
-        if temp_remote and temp_remote.Name:find("\n") then
-            parry_remote = temp_remote
-            break
-        end
+-- Menambahkan Toggle untuk Auto Parry di dalam Section
+Section:AddToggle({
+    Name = "Auto Parry",
+    Default = false, -- Nilai defaultnya (OFF)
+    Callback = function(toggled) 
+        -- Ketika toggle diaktifkan/dimatikan
+        resolve_parry_Remote()
+        getgenv().aura_Enabled = toggled -- Mengaktifkan atau menonaktifkan aura_Enabled
+        print("Auto Parry is now " .. (toggled and "Enabled" or "Disabled"))
     end
-end
-
--- Menambahkan Toggle untuk Auto Parry di dalam Section, sesuai format Anda
-Section:CreateToggle("Auto Parry", function(toggled) 
-    -- Panggil resolve_parry_Remote saat toggle berubah
-    resolve_parry_Remote()
-
-    -- Menyetel nilai aura_Enabled sesuai status toggle
-    getgenv().aura_Enabled = toggled
-
-    -- Cetak status jika diinginkan (opsional)
-    print(toggled)
-end)
-
--- Tambahkan toggle Night Mode
-Tab:AddToggle({
-    Name = "Night Mode",
-    Default = false,
-    Callback = function(value)
-        getgenv().night_mode_Enabled = value
-        print("Night Mode: " .. tostring(value))
-    end    
-})
-
--- Tambahkan toggle Trail Effect
-Tab:AddToggle({
-    Name = "Trail Effect",
-    Default = false,
-    Callback = function(value)
-        getgenv().trail_Enabled = value
-        print("Trail Effect: " .. tostring(value))
-    end    
 })
 
 local Stats = game:GetService("Stats")

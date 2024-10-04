@@ -11,6 +11,7 @@ local player = Players.LocalPlayer
 local canParry = true
 local autoParryEnabled = false
 local autoSpamEnabled = false
+local parryCooldown = 0.5  -- Cooldown untuk parry agar tidak terlalu cepat
 
 -- Aura Table untuk menyimpan data dan status parry/spam
 local aura_table = {
@@ -122,7 +123,7 @@ end
 
 -- Fungsi AutoParry dengan Ping dan jarak
 local function autoParry()
-    if autoParryEnabled then
+    if autoParryEnabled and canParry then
         local closestBall, predictionTime = getClosestEntityForParry()
         if closestBall and predictionTime <= math.max(0.4, 0.6 - closestBall.Velocity.Magnitude * 0.03) then
             parry()
@@ -136,8 +137,12 @@ local function parry()
         canParry = false
         VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
         VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
-        task.delay(0.1, function() canParry = true end)
         print("Parried!")
+        
+        -- Setelah melakukan parry, tambahkan cooldown untuk mencegah parry berlebihan
+        task.delay(parryCooldown, function()
+            canParry = true
+        end)
     end
 end
 

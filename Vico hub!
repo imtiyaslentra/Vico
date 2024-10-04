@@ -2,6 +2,7 @@
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local VirtualInputManager = game:GetService("VirtualInputManager")
 local BallFolder = Workspace:WaitForChild("Balls")
 local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
@@ -11,11 +12,40 @@ local canParry = true
 local autoParryEnabled = false
 local autoSpamEnabled = false
 
+-- Aura Table untuk menyimpan data dan status parry/spam
+local aura_table = {
+    canParry = true,
+    is_Spamming = false,
+    parry_Range = 0,
+    spam_Range = 0,  
+    hit_Count = 0,
+    hit_Time = tick(),
+    ball_Warping = tick(),
+    is_ball_Warping = false
+}
+
 -- Latency (Ping) handling untuk AutoParry
 local ping = game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValueString()
 local adjustedPing = tonumber(ping:match("%d+")) / 1000 -- Mengkonversi ping ke detik
 
--- Fungsi menghitung waktu prediksi bola mencapai pemain
+-- Fungsi untuk mendeteksi entitas terdekat (pemain atau objek)
+local function get_closest_entity(object)
+    local closest_Entity = nil
+    local max_distance = math.huge
+    
+    for _, entity in ipairs(Workspace.Alive:GetChildren()) do
+        if entity.Name ~= player.Name and entity:FindFirstChild("HumanoidRootPart") then
+            local distance = (object.Position - entity.HumanoidRootPart.Position).Magnitude
+            if distance < max_distance then
+                closest_Entity = entity
+                max_distance = distance
+            end
+        end
+    end
+    return closest_Entity
+end
+
+-- Fungsi untuk menghitung prediksi waktu bola mencapai pemain (dengan penyesuaian ping)
 local function calculatePredictionTime(ball)
     local character = player.Character
     if character then
@@ -32,35 +62,8 @@ local function calculatePredictionTime(ball)
     return math.huge
 end
 
--- Fungsi untuk mendeteksi pemain terdekat
-local function getClosestPlayer()
-    local closestPlayer = nil
-    local closestDistance = math.huge
-    local myCharacter = player.Character
-    if myCharacter then
-        local myRootPart = myCharacter:FindFirstChild("HumanoidRootPart")
-        if myRootPart then
-            for _, otherPlayer in ipairs(Players:GetPlayers()) do
-                if otherPlayer ~= player and otherPlayer.Character then
-                    local otherRootPart = otherPlayer.Character:FindFirstChild("HumanoidRootPart")
-                    if otherRootPart then
-                        local distance = (myRootPart.Position - otherRootPart.Position).Magnitude
-                        if distance < 50 then -- Anggap 50 sebagai jarak "sangat dekat"
-                            if distance < closestDistance then
-                                closestDistance = distance
-                                closestPlayer = otherPlayer
-                            end
-                        end
-                    end
-                end
-            end
-        end
-    end
-    return closestPlayer
-end
-
--- Fungsi deteksi bola terdekat (untuk AutoParry)
-local function getClosestEntity()
+-- Fungsi untuk mendeteksi bola terdekat untuk AutoParry
+local function getClosestEntityForParry()
     local closestBall, closestDistance = nil, math.huge
     for _, ball in ipairs(BallFolder:GetChildren()) do
         if ball:GetAttribute("realBall") and ball:GetAttribute("target") == player.Name then
@@ -75,7 +78,7 @@ end
 
 -- Fungsi deteksi bola untuk AutoSpam, mempertimbangkan pemain terdekat
 local function getSpamBall()
-    local closestPlayer = getClosestPlayer()
+    local closestPlayer = get_closest_entity(player.Character.PrimaryPart)
     local targetRelevantBall = nil
     local myName = player.Name
     
@@ -104,7 +107,7 @@ local function getSpamBall()
     return targetRelevantBall
 end
 
--- Fungsi AutoSpam terpisah dari AutoParry
+-- Fungsi AutoSpam untuk mengelola spam jika bola valid ditemukan
 local function autoSpam()
     if autoSpamEnabled then
         local ball = getSpamBall()
@@ -120,7 +123,7 @@ end
 -- Fungsi AutoParry dengan Ping dan jarak
 local function autoParry()
     if autoParryEnabled then
-        local closestBall, predictionTime = getClosestEntity()
+        local closestBall, predictionTime = getClosestEntityForParry()
         if closestBall and predictionTime <= math.max(0.4, 0.6 - closestBall.Velocity.Magnitude * 0.03) then
             parry()
         end

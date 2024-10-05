@@ -61,15 +61,6 @@ else
     warn("Section could not be created!")
 end
 
--- Add a toggle button to the section
-Section:AddToggle({
-    Name = "Toggle Auto Parry",
-    Default = false, -- Set to true if you want it to be active by default
-    Callback = function(value)
-        ToggleAutoParry(value)
-    end
-})
-
 -- Notifikasi ketika GUI di-load
 OrionLib:MakeNotification({
     Name = "Execution Started",

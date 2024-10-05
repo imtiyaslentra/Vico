@@ -175,5 +175,4 @@ runService.Heartbeat:Connect(checkBallsProximity)
 
 autoParryActive = true
 print("Manually set Auto Parry Active to true.")
-
 print("Script ran without errors")

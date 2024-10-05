@@ -53,7 +53,7 @@ end
 -- Add a toggle button to the section
 Section:AddToggle({
     Name = "Toggle Auto Parry",
-    Default = false,
+    Default = true,
     Callback = function(value)
         ToggleAutoParry(value)
     end
@@ -121,10 +121,11 @@ print("Ping Value:", ping) -- Debug output
 
 -- Check proximity to player
 local function checkProximityToPlayer(ball, player)
+    print("Checking proximity to player... Auto Parry Active:", autoParryActive) -- Debug output
     if not autoParryActive then 
-        print("Auto Parry is not active. Exiting function.")
+        print("Auto Parry is not active. Exiting function.") 
         return 
-    end 
+    end
 
     local predictionTime = calculatePredictionTime(ball, player)
     local realBallAttribute = ball:GetAttribute("realBall")
@@ -156,7 +157,6 @@ local function checkProximityToPlayer(ball, player)
     else
         print("Conditions for parry not met. Adjusted Prediction Time:", adjustedPredictionTime, "Ball Speed Threshold:", ballSpeedThreshold)
     end
-end
 
 -- Function to check ball proximity
 local function checkBallsProximity()
@@ -172,5 +172,9 @@ local function checkBallsProximity()
 end
 
 runService.Heartbeat:Connect(checkBallsProximity)
+
+-- At the end of your script, after all functions
+autoParryActive = true -- Manually set to true for testing
+print("Manually set Auto Parry Active to true.")
 
 print("Script ran without errors")

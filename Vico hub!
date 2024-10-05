@@ -27,11 +27,48 @@ local Section = Tab:AddSection({
     Name = "Auto Parry Controls"
 })
 
+local function ToggleAutoParry(value)
+    autoParryActive = value
+    if autoParryActive then
+        OrionLib:MakeNotification({
+            Name = "Auto Parry Activated",
+            Content = "Auto Parry is now active!",
+            Image = nil,
+            Time = 3
+        })
+    else
+        OrionLib:MakeNotification({
+            Name = "Auto Parry Deactivated",
+            Content = "Auto Parry has been turned off.",
+            Image = nil,
+            Time = 3
+        })
+    end
+end
+
+-- Add a toggle button to the section
+Section:AddToggle({
+    Name = "Toggle Auto Parry",
+    Default = false, -- Set to true if you want it to be active by default
+    Callback = function(value)
+        ToggleAutoParry(value)
+    end
+})
+
 if Section then
     print("Section is created successfully.")
 else
     warn("Section could not be created!")
 end
+
+-- Add a toggle button to the section
+Section:AddToggle({
+    Name = "Toggle Auto Parry",
+    Default = false, -- Set to true if you want it to be active by default
+    Callback = function(value)
+        ToggleAutoParry(value)
+    end
+})
 
 -- Notifikasi ketika GUI di-load
 OrionLib:MakeNotification({
@@ -128,34 +165,5 @@ local function checkBallsProximity()
 end
 
 runService.Heartbeat:Connect(checkBallsProximity)
-
--- Fungsi toggle untuk Auto Parry
-local function ToggleAutoParry(value)
-    autoParryActive = value
-    if autoParryActive then
-        OrionLib:MakeNotification({
-            Name = "Auto Parry Activated",
-            Content = "Auto Parry is now active!",
-            Image = nil,
-            Time = 3
-        })
-    else
-        OrionLib:MakeNotification({
-            Name = "Auto Parry Deactivated",
-            Content = "Auto Parry has been turned off.",
-            Image = nil,
-            Time = 3
-        })
-    end
-end
-
--- Add a toggle button to the section
-Section:AddToggle({
-    Name = "Toggle Auto Parry",
-    Default = false, -- Set to true if you want it to be active by default
-    Callback = function(value)
-        ToggleAutoParry(value)
-    end
-})
 
 print("Script ran without errors")

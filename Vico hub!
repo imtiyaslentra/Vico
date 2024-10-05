@@ -28,7 +28,6 @@ local Section = Tab:AddSection({
 })
 
 local function ToggleAutoParry(value)
-local function ToggleAutoParry(value)
     autoParryActive = value
     print("Toggle Auto Parry Called with value:", value) -- Debug output
     print("Auto Parry Active:", autoParryActive) -- Debug output

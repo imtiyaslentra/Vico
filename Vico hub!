@@ -8,12 +8,24 @@ local Window = OrionLib:MakeWindow({
     ConfigFolder = "OrionTest",
 })
 
--- Call Init on the window object
+-- Ensure the window is initialized
 if Window and type(Window.Init) == "function" then
     Window:Init()
 else
     warn("Window Init function is missing!")
 end
+
+-- Create the main tab
+local Tab = Window:MakeTab({
+    Name = "Main",
+    Icon = "rbxassetid://4483362458",
+    PremiumOnly = false
+})
+
+-- Create a section within the tab
+local Section = Tab:AddSection({
+    Name = "Auto Parry Controls"
+})
 
 -- Create the PingEvent if it doesn't exist
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -148,8 +160,8 @@ end
 runService.Heartbeat:Connect(checkBallsProximity)
 
 -- Fungsi toggle untuk Auto Parry
-local function ToggleAutoParry()
-    autoParryActive = not autoParryActive
+local function ToggleAutoParry(value)
+    autoParryActive = value
     if autoParryActive then
         OrionLib:MakeNotification({
             Name = "Auto Parry Activated",
@@ -167,11 +179,12 @@ local function ToggleAutoParry()
     end
 end
 
--- Tombol Toggle Auto Parry pada tab
-Tab:AddButton({
+-- Add a toggle button to the section
+Section:AddToggle({
     Name = "Toggle Auto Parry",
-    Callback = function()
-        ToggleAutoParry()
+    Default = false, -- Set to true if you want it to be active by default
+    Callback = function(value)
+        ToggleAutoParry(value)
     end
 })
 

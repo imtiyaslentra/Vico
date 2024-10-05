@@ -50,7 +50,7 @@ end
 -- Add a toggle button to the section
 Section:AddToggle({
     Name = "Toggle Auto Parry",
-    Default = false,
+    Default = true,
     Callback = function(value)
         ToggleAutoParry(value)
     end

@@ -33,15 +33,6 @@ else
     warn("Section could not be created!")
 end
 
--- Create the PingEvent if it doesn't exist
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local pingEvent = ReplicatedStorage:FindFirstChild("PingEvent")
-if not pingEvent then
-    pingEvent = Instance.new("RemoteEvent")
-    pingEvent.Name = "PingEvent"
-    pingEvent.Parent = ReplicatedStorage
-end
-
 -- Notifikasi ketika GUI di-load
 OrionLib:MakeNotification({
     Name = "Execution Started",
@@ -90,19 +81,11 @@ local function updateIndicatorPosition(ball)
     indicatorPart.Position = ball.Position
 end
 
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
+-- Update the ping calculation
+local Stats = game:GetService("Stats")
+local ping = Stats.Network.ServerStatsItem["Data Ping"]:GetValue() / 10
 
-local pingEvent = ReplicatedStorage:WaitForChild("PingEvent")
-
--- Function to calculate ping
-local function calculatePing()
-    local startTime = tick()
-    pingEvent:FireServer()  -- Send request to the server
-    local response = pingEvent.OnClientEvent:Wait()  -- Wait for the server response
-    return tick() - startTime  -- Calculate round-trip time
-end
-
--- Update checkProximityToPlayer function to account for ping
+-- Use ping in your existing logic
 local function checkProximityToPlayer(ball, player)
     if not autoParryActive then return end -- Hentikan fungsi jika Auto Parry tidak aktif
 
@@ -111,17 +94,10 @@ local function checkProximityToPlayer(ball, player)
     local target = ball:GetAttribute("target")
     
     local ballSpeedThreshold = math.max(0.31, 0.5 - ball.Velocity.magnitude * 0.01)
-
-    -- Calculate ping
-    local ping = calculatePing()
-    print("Ping: " .. ping)
-
-    -- Adjust prediction time based on ping
-    local adjustedPredictionTime = predictionTime + ping / 2  -- Use half the round-trip time for prediction
-
-    -- Menampilkan nilai prediksi waktu dan ambang kecepatan bola
-    print("Adjusted Prediction Time: " .. adjustedPredictionTime)
-    print("Ball Speed Threshold: " .. ballSpeedThreshold)
+    
+    -- Adjust your logic here using the ping variable if necessary
+    -- Example: if you want to add a delay based on ping
+    local adjustedPredictionTime = predictionTime + (ping / 1000) -- Adjusting prediction time based on ping
 
     if adjustedPredictionTime <= ballSpeedThreshold and realBallAttribute == true and target == player.Name and not isKeyPressed then
         vim:SendKeyEvent(true, Enum.KeyCode.F, false, nil)

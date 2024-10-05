@@ -52,129 +52,64 @@ local autoParryActive = false -- Status untuk toggle Auto Parry
 
 -- Fungsi untuk menghitung waktu prediksi hingga tabrakan
 local function calculatePredictionTime(ball, player)
-    -- Pastikan karakter pemain dan HumanoidRootPart ada
     if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
         local rootPart = player.Character.HumanoidRootPart
         local relativePosition = ball.Position - rootPart.Position
-        local velocity = ball.Velocity + rootPart.Velocity
-
-        -- Tambahan Validasi kecepatan agar tidak nol (untuk menghindari pembagian nol)
-        if velocity.magnitude == 0 then
-            return math.huge -- Jika kecepatan nol, tidak akan ada tabrakan
-        end
-        
-        -- Radius bola
-        local ballRadius = ball.Size.magnitude / 2
-        
-        -- Menggunakan jarak langsung untuk perhitungan waktu ke tabrakan
-        local distance = relativePosition.magnitude
-
-        -- Jika bola sangat dekat dengan pemain, anggap sudah tabrakan
-        if distance <= ballRadius then
-            return 0 -- Sudah terjadi tabrakan
-        end
-
-        -- Waktu hingga tabrakan dihitung dengan lebih sederhana
-        local timeToCollision = (distance - ballRadius) / velocity.magnitude
-
-        -- Pastikan waktu prediksi tidak negatif (penanganan kasus khusus)
-        if timeToCollision < 0 then
-            return math.huge
-        end
-
+        local velocity = ball.Velocity + rootPart.Velocity 
+        local a = (ball.Size.magnitude / 2) 
+        local b = relativePosition.magnitude
+        local c = math.sqrt(a * a + b * b)
+        local timeToCollision = (c - a) / velocity.magnitude
         return timeToCollision
     end
-
-    -- Jika HumanoidRootPart tidak ditemukan atau karakter tidak valid, return waktu tak terbatas
     return math.huge
 end
 
--- Mengambil referensi ke objek bola dengan aman
-local ball = game.Workspace:FindFirstChild("Ball") -- Mengambil referensi ke objek bola
-local indicatorPart = game.Workspace:FindFirstChild("IndicatorPart") -- Mengambil referensi ke objek indikator
-local lastPosition = ball and ball.Position or Vector3.new() -- Menyimpan posisi terakhir bola
-
-local function updateIndicatorPosition()
-    if ball and ball:IsA("BasePart") then
-        local currentPosition = ball.Position
-        -- Hanya memperbarui jika bergerak lebih dari 0.1 stud
-        if (currentPosition - lastPosition).magnitude > 0.1 then 
-            indicatorPart.Position = currentPosition
-            lastPosition = currentPosition -- Memperbarui posisi terakhir
-        end
-    else
-        warn("Invalid ball object.")
-    end
-end
-
--- Menghubungkan fungsi update dengan perubahan posisi bola
-if ball then
-    ball.Changed:Connect(function(property)
-        if property == "Position" then
-            updateIndicatorPosition()
-        end
-    end)
-else
-    warn("Bola tidak ditemukan di Workspace!")
+-- Fungsi untuk memperbarui posisi indikator
+local function updateIndicatorPosition(ball)
+    indicatorPart.Position = ball.Position
 end
 
 -- Fungsi untuk memeriksa kedekatan bola dengan pemain
 local function checkProximityToPlayer(ball, player)
     if not autoParryActive then return end -- Hentikan fungsi jika Auto Parry tidak aktif
 
-    -- Tambahan Validasi Objek Bola dan Pemain
-    if not ball or not player then return end -- Pastikan objek valid
-
     local predictionTime = calculatePredictionTime(ball, player)
     local realBallAttribute = ball:GetAttribute("realBall")
     local target = ball:GetAttribute("target")
     
-    -- Penambahan Batas Waktu untuk Prevent Spam
     local ballSpeedThreshold = math.max(0.31, 0.5 - ball.Velocity.magnitude * 0.01)
-    local currentTime = tick() -- Menyimpan waktu saat ini untuk timeout
-    local timeoutDuration = 0.5 -- Durasi timeout 0.5 detik untuk menghindari spamming
+    local distanceToBall = (ball.Position - player.Character.HumanoidRootPart.Position).magnitude
+    local maxDetectionDistance = 30 -- Atur jarak maksimum untuk deteksi parry
 
-    -- Tambahan Validasi Prediksi
-    if predictionTime < 0 or predictionTime > 5 then return end -- Jika waktu prediksi terlalu besar atau kecil, abaikan
-
-    -- Cegah Spam Key Press dengan timeout dan optimalisasi prediksi
-    if predictionTime <= ballSpeedThreshold and realBallAttribute == true and target == player.Name and not isKeyPressed then
-        vim:SendKeyEvent(true, Enum.KeyCode.F, false, nil)
-        wait(0.005)
-        vim:SendKeyEvent(false, Enum.KeyCode.F, false, nil)
-        lastBallPressed = ball
-        isKeyPressed = true
-        keyPressedTime = currentTime -- Simpan waktu saat tombol ditekan
-
-        OrionLib:MakeNotification({
-            Name = "Parry Executed",
-            Content = "Successfully executed parry!",
-            Image = nil,
-            Time = 3
-        })
-    
-    -- Jika bola berubah atau timeout tercapai, reset isKeyPressed
-    elseif lastBallPressed == ball and (predictionTime > ballSpeedThreshold or realBallAttribute ~= true or target ~= player.Name or (currentTime - keyPressedTime > timeoutDuration)) then
-        isKeyPressed = false
-        lastBallPressed = nil -- Reset bola terakhir saat kondisi tidak lagi valid
+    -- Tambahkan logika deteksi jarak
+    if distanceToBall <= maxDetectionDistance then
+        -- Memeriksa apakah prediksi waktu tabrakan valid
+        if predictionTime <= ballSpeedThreshold and realBallAttribute == true and target == player.Name and not isKeyPressed then
+            vim:SendKeyEvent(true, Enum.KeyCode.F, false, nil)
+            wait(0.005)
+            vim:SendKeyEvent(false, Enum.KeyCode.F, false, nil)
+            lastBallPressed = ball
+            isKeyPressed = true
+            OrionLib:MakeNotification({
+                Name = "Parry Executed",
+                Content = "Successfully executed parry!",
+                Image = nil,
+                Time = 3
+            })
+        elseif lastBallPressed == ball and (predictionTime > ballSpeedThreshold or realBallAttribute ~= true or target ~= player.Name) then
+            isKeyPressed = false
+        end
     end
 end
 
 -- Fungsi untuk memeriksa kedekatan bola
 local function checkBallsProximity()
     local player = players.LocalPlayer
-    if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-        local rootPart = player.Character.HumanoidRootPart
-
+    if player then
         for _, ball in pairs(ballFolder:GetChildren()) do
-            -- Optimasi: Hanya periksa bola yang berada dalam jarak yang relevan
-            local distance = (ball.Position - rootPart.Position).magnitude
-
-            -- Proses hanya bola yang dekat dengan pemain (misalnya, jarak < 50)
-            if distance <= 50 then
-                checkProximityToPlayer(ball, player)
-                updateIndicatorPosition()
-            end
+            checkProximityToPlayer(ball, player)
+            updateIndicatorPosition(ball)
         end
     end
 end

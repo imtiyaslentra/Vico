@@ -27,6 +27,12 @@ local Section = Tab:AddSection({
     Name = "Auto Parry Controls"
 })
 
+if Section then
+    print("Section is created successfully.")
+else
+    warn("Section could not be created!")
+end
+
 -- Create the PingEvent if it doesn't exist
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local pingEvent = ReplicatedStorage:FindFirstChild("PingEvent")
@@ -42,13 +48,6 @@ OrionLib:MakeNotification({
     Content = "GUI successfully loaded!",
     Image = nil,
     Time = 5
-})
-
--- Tab utama
-local Tab = Window:MakeTab({
-    Name = "Main",
-    Icon = "rbxassetid://4483362458",
-    PremiumOnly = false
 })
 
 -- SERVICES

@@ -55,8 +55,8 @@ local function calculatePredictionTime(ball, player)
     if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
         local rootPart = player.Character.HumanoidRootPart
         local relativePosition = ball.Position - rootPart.Position
-        local velocity = ball.Velocity + rootPart.Velocity 
-        local a = (ball.Size.magnitude / 2) 
+        local velocity = ball:GetVelocity() + rootPart.Velocity  -- Menggunakan GetVelocity()
+        local a = (ball.Size.magnitude / 2)
         local b = relativePosition.magnitude
         local c = math.sqrt(a * a + b * b)
         local timeToCollision = (c - a) / velocity.magnitude
@@ -74,18 +74,22 @@ end
 local function checkProximityToPlayer(ball, player)
     if not autoParryActive then return end -- Hentikan fungsi jika Auto Parry tidak aktif
 
-    local predictionTime = calculatePredictionTime(ball, player)
+    local predictionTime = calculatePredictionTime(ball, player)  -- Memanggil calculatePredictionTime
     local realBallAttribute = ball:GetAttribute("realBall")
     local target = ball:GetAttribute("target")
     
     local ballSpeedThreshold = math.max(0.31, 0.5 - ball.Velocity.magnitude * 0.01)
 
+    -- Menampilkan nilai prediksi waktu dan ambang kecepatan bola
+    print("Prediction Time: " .. predictionTime)
+    print("Ball Speed Threshold: " .. ballSpeedThreshold)
+
     if predictionTime <= ballSpeedThreshold and realBallAttribute == true and target == player.Name and not isKeyPressed then
-        vim:SendKeyEvent(true, Enum.KeyCode.F, false, nil)
-        wait(0.005)
-        vim:SendKeyEvent(false, Enum.KeyCode.F, false, nil)
-        lastBallPressed = ball
-        isKeyPressed = true
+        vim:SendKeyEvent(true, Enum.KeyCode.F, false, nil)  -- Mengirimkan input untuk parry
+        wait(0.005)  -- Delay kecil
+        vim:SendKeyEvent(false, Enum.KeyCode.F, false, nil) -- Menghentikan input
+        lastBallPressed = ball  -- Menyimpan bola yang terakhir diparried
+        isKeyPressed = true  -- Menandai bahwa tombol sudah ditekan
         OrionLib:MakeNotification({
             Name = "Parry Executed",
             Content = "Successfully executed parry!",
@@ -93,7 +97,7 @@ local function checkProximityToPlayer(ball, player)
             Time = 3
         })
     elseif lastBallPressed == ball and (predictionTime > ballSpeedThreshold or realBallAttribute ~= true or target ~= player.Name) then
-        isKeyPressed = false
+        isKeyPressed = false  -- Menandai bahwa tombol tidak lagi ditekan
     end
 end
 

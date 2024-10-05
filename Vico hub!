@@ -70,36 +70,60 @@ local function updateIndicatorPosition(ball)
     indicatorPart.Position = ball.Position
 end
 
--- Fungsi untuk memeriksa kedekatan bola dengan pemain
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local pingEvent = ReplicatedStorage:WaitForChild("PingEvent")
+
+-- Function to calculate ping
+local function calculatePing()
+    local startTime = tick()
+    pingEvent:FireServer()  -- Send request to the server
+    local response = pingEvent.OnClientEvent:Wait()  -- Wait for the server response
+    return tick() - startTime  -- Calculate round-trip time
+end
+
+-- Update checkProximityToPlayer function to account for ping
 local function checkProximityToPlayer(ball, player)
     if not autoParryActive then return end -- Hentikan fungsi jika Auto Parry tidak aktif
 
-    local predictionTime = calculatePredictionTime(ball, player)  -- Memanggil calculatePredictionTime
+    local predictionTime = calculatePredictionTime(ball, player)
     local realBallAttribute = ball:GetAttribute("realBall")
     local target = ball:GetAttribute("target")
     
     local ballSpeedThreshold = math.max(0.31, 0.5 - ball.Velocity.magnitude * 0.01)
 
+    -- Calculate ping
+    local ping = calculatePing()
+    print("Ping: " .. ping)
+
+    -- Adjust prediction time based on ping
+    local adjustedPredictionTime = predictionTime + ping / 2  -- Use half the round-trip time for prediction
+
     -- Menampilkan nilai prediksi waktu dan ambang kecepatan bola
-    print("Prediction Time: " .. predictionTime)
+    print("Adjusted Prediction Time: " .. adjustedPredictionTime)
     print("Ball Speed Threshold: " .. ballSpeedThreshold)
 
-    if predictionTime <= ballSpeedThreshold and realBallAttribute == true and target == player.Name and not isKeyPressed then
-        vim:SendKeyEvent(true, Enum.KeyCode.F, false, nil)  -- Mengirimkan input untuk parry
-        wait(0.005)  -- Delay kecil
-        vim:SendKeyEvent(false, Enum.KeyCode.F, false, nil) -- Menghentikan input
-        lastBallPressed = ball  -- Menyimpan bola yang terakhir diparried
-        isKeyPressed = true  -- Menandai bahwa tombol sudah ditekan
+    if adjustedPredictionTime <= ballSpeedThreshold and realBallAttribute == true and target == player.Name and not isKeyPressed then
+        vim:SendKeyEvent(true, Enum.KeyCode.F, false, nil)
+        wait(0.005)
+        vim:SendKeyEvent(false, Enum.KeyCode.F, false, nil)
+        lastBallPressed = ball
+        isKeyPressed = true
         OrionLib:MakeNotification({
             Name = "Parry Executed",
             Content = "Successfully executed parry!",
             Image = nil,
             Time = 3
         })
-    elseif lastBallPressed == ball and (predictionTime > ballSpeedThreshold or realBallAttribute ~= true or target ~= player.Name) then
-        isKeyPressed = false  -- Menandai bahwa tombol tidak lagi ditekan
+    elseif lastBallPressed == ball and (adjustedPredictionTime > ballSpeedThreshold or realBallAttribute ~= true or target ~= player.Name) then
+        isKeyPressed = false
     end
 end
+
+-- Server Script to respond to PingEvent
+pingEvent.OnServerEvent:Connect(function(player)
+    pingEvent:FireClient(player)  -- Respond back to the client
+end)
 
 -- Fungsi untuk memeriksa kedekatan bola
 local function checkBallsProximity()

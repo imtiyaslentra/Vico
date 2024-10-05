@@ -89,10 +89,10 @@ local function calculatePredictionTime(ball, player)
     return math.huge
 end
 
--- Fungsi untuk memperbarui posisi indikator
-local ball = game.Workspace.Ball -- Mengambil referensi ke objek bola
-local indicatorPart = game.Workspace.IndicatorPart -- Mengambil referensi ke objek indikator
-local lastPosition = ball.Position -- Menyimpan posisi terakhir bola
+-- Mengambil referensi ke objek bola dengan aman
+local ball = game.Workspace:FindFirstChild("Ball") -- Mengambil referensi ke objek bola
+local indicatorPart = game.Workspace:FindFirstChild("IndicatorPart") -- Mengambil referensi ke objek indikator
+local lastPosition = ball and ball.Position or Vector3.new() -- Menyimpan posisi terakhir bola
 
 local function updateIndicatorPosition()
     if ball and ball:IsA("BasePart") then
@@ -108,11 +108,15 @@ local function updateIndicatorPosition()
 end
 
 -- Menghubungkan fungsi update dengan perubahan posisi bola
-ball.Changed:Connect(function(property)
-    if property == "Position" then
-        updateIndicatorPosition()
-    end
-end)
+if ball then
+    ball.Changed:Connect(function(property)
+        if property == "Position" then
+            updateIndicatorPosition()
+        end
+    end)
+else
+    warn("Bola tidak ditemukan di Workspace!")
+end
 
 -- Fungsi untuk memeriksa kedekatan bola dengan pemain
 local function checkProximityToPlayer(ball, player)
@@ -169,7 +173,7 @@ local function checkBallsProximity()
             -- Proses hanya bola yang dekat dengan pemain (misalnya, jarak < 50)
             if distance <= 50 then
                 checkProximityToPlayer(ball, player)
-                updateIndicatorPosition(ball)
+                updateIndicatorPosition()
             end
         end
     end

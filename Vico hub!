@@ -55,8 +55,8 @@ local function calculatePredictionTime(ball, player)
     if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
         local rootPart = player.Character.HumanoidRootPart
         local relativePosition = ball.Position - rootPart.Position
-        local velocity = ball:GetVelocity() + rootPart.Velocity  -- Menggunakan GetVelocity()
-        local a = (ball.Size.magnitude / 2)
+        local velocity = ball.velocity + rootPart.Velocity  -- Ganti dengan 'ball.velocity'
+        local a = (ball.Size.magnitude / 2) 
         local b = relativePosition.magnitude
         local c = math.sqrt(a * a + b * b)
         local timeToCollision = (c - a) / velocity.magnitude

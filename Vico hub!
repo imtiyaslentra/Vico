@@ -1,6 +1,6 @@
 local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
 
--- Membuat window utama
+-- Create the main window
 local Window = OrionLib:MakeWindow({
     Name = "Blade Ball",
     HidePremium = false,
@@ -8,11 +8,20 @@ local Window = OrionLib:MakeWindow({
     ConfigFolder = "OrionTest",
 })
 
--- Memanggil Init pada objek Window
+-- Call Init on the window object
 if Window and type(Window.Init) == "function" then
     Window:Init()
 else
     warn("Window Init function is missing!")
+end
+
+-- Create the PingEvent if it doesn't exist
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local pingEvent = ReplicatedStorage:FindFirstChild("PingEvent")
+if not pingEvent then
+    pingEvent = Instance.new("RemoteEvent")
+    pingEvent.Name = "PingEvent"
+    pingEvent.Parent = ReplicatedStorage
 end
 
 -- Notifikasi ketika GUI di-load

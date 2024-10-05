@@ -37,6 +37,7 @@ local function ToggleAutoParry(value)
             Image = nil,
             Time = 3
         })
+        print("Auto Parry has been activated.")
     else
         OrionLib:MakeNotification({
             Name = "Auto Parry Deactivated",
@@ -44,13 +45,14 @@ local function ToggleAutoParry(value)
             Image = nil,
             Time = 3
         })
+        print("Auto Parry has been deactivated.")
     end
 end
 
 -- Add a toggle button to the section
 Section:AddToggle({
     Name = "Toggle Auto Parry",
-    Default = true,
+    Default = false,
     Callback = function(value)
         ToggleAutoParry(value)
     end
@@ -92,35 +94,23 @@ local autoParryActive = false -- Status untuk toggle Auto Parry
 
 -- Function to calculate prediction time until collision
 local function calculatePredictionTime(ball, player)
-    local success, result = pcall(function()
-        if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-            local rootPart = player.Character.HumanoidRootPart
-            local relativePosition = ball.Position - rootPart.Position
-            local velocity = ball.Velocity + rootPart.Velocity  -- Ganti dengan 'ball.Velocity'
-            local a = (ball.Size.magnitude / 2) 
-            local b = relativePosition.magnitude
-            local c = math.sqrt(a * a + b * b)
-            local timeToCollision = (c - a) / velocity.magnitude
-            return timeToCollision
-        end
-        return math.huge
-    end)
-
-    if not success then
-        print("Error calculating prediction time:", result)
+    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+        local rootPart = player.Character.HumanoidRootPart
+        local relativePosition = ball.Position - rootPart.Position
+        local velocity = ball.Velocity + rootPart.Velocity
+        local a = (ball.Size.magnitude / 2) 
+        local b = relativePosition.magnitude
+        local c = math.sqrt(a * a + b * b)
+        local timeToCollision = (c - a) / velocity.magnitude
+        return timeToCollision
     end
-    return result or math.huge
+    print("Player or HumanoidRootPart not found.")
+    return math.huge
 end
 
 -- Function to update indicator position
 local function updateIndicatorPosition(ball)
-    local success, result = pcall(function()
-        indicatorPart.Position = ball.Position
-    end)
-
-    if not success then
-        print("Error updating indicator position:", result)
-    end
+    indicatorPart.Position = ball.Position
 end
 
 -- Update the ping calculation
@@ -130,41 +120,40 @@ print("Ping Value:", ping) -- Debug output
 
 -- Check proximity to player
 local function checkProximityToPlayer(ball, player)
-    if not autoParryActive then return end -- Hentikan fungsi jika Auto Parry tidak aktif
+    if not autoParryActive then 
+        print("Auto Parry is not active. Exiting function.")
+        return 
+    end 
 
     local predictionTime = calculatePredictionTime(ball, player)
     local realBallAttribute = ball:GetAttribute("realBall")
     local target = ball:GetAttribute("target")
-
+    
     local ballSpeedThreshold = math.max(0.31, 0.5 - ball.Velocity.magnitude * 0.01)
     
     -- Adjusted prediction time based on ping
-    local adjustedPredictionTime = predictionTime + (ping / 1000) -- Adjusting prediction time based on ping
+    local adjustedPredictionTime = predictionTime + (ping / 1000) 
     print("Adjusted Prediction Time:", adjustedPredictionTime) -- Debug output
 
     if adjustedPredictionTime <= ballSpeedThreshold and realBallAttribute == true and target == player.Name and not isKeyPressed then
-        local success, result = pcall(function()
-            vim:SendKeyEvent(true, Enum.KeyCode.F, false, nil)
-            wait(0.005)
-            vim:SendKeyEvent(false, Enum.KeyCode.F, false, nil)
-            lastBallPressed = ball
-            isKeyPressed = true
-            OrionLib:MakeNotification({
-                Name = "Parry Executed",
-                Content = "Successfully executed parry!",
-                Image = nil,
-                Time = 3
-            })
-        end)
-
-        if not success then
-            print("Error executing parry:", result)
-        else
-            print("Parry Executed!") -- Debug output
-        end
+        print("Executing parry...")
+        vim:SendKeyEvent(true, Enum.KeyCode.F, false, nil)
+        wait(0.005)
+        vim:SendKeyEvent(false, Enum.KeyCode.F, false, nil)
+        lastBallPressed = ball
+        isKeyPressed = true
+        OrionLib:MakeNotification({
+            Name = "Parry Executed",
+            Content = "Successfully executed parry!",
+            Image = nil,
+            Time = 3
+        })
+        print("Parry Executed!") -- Debug output
     elseif lastBallPressed == ball and (adjustedPredictionTime > ballSpeedThreshold or realBallAttribute ~= true or target ~= player.Name) then
         isKeyPressed = false
         print("Parry reset for ball:", ball) -- Debug output
+    else
+        print("Conditions for parry not met. Adjusted Prediction Time:", adjustedPredictionTime, "Ball Speed Threshold:", ballSpeedThreshold)
     end
 end
 
@@ -176,6 +165,8 @@ local function checkBallsProximity()
             checkProximityToPlayer(ball, player)
             updateIndicatorPosition(ball)
         end
+    else
+        print("Player not found!")
     end
 end
 

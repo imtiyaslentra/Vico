@@ -116,11 +116,6 @@ local function checkProximityToPlayer(ball, player)
     end
 end
 
--- Server Script to respond to PingEvent
-pingEvent.OnServerEvent:Connect(function(player)
-    pingEvent:FireClient(player)  -- Respond back to the client
-end)
-
 -- Fungsi untuk memeriksa kedekatan bola
 local function checkBallsProximity()
     local player = players.LocalPlayer

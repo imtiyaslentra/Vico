@@ -468,69 +468,48 @@ local function optimizePerformance()
     end
     optimizeMemoryUsage()
 end
-local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
-local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
-local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
-----------------------------------------------------------------------------------------------------------------------------------------------
-local Window = Fluent:CreateWindow({
-    Title = "March Hub",
-    SubTitle = "https://discord.gg/EJB93G3jGe",
-    TabWidth = 160,
-    Size = UDim2.fromOffset(500, 320),
-    Acrylic = true,
-    Theme = "Light",
-    MinimizeKey = Enum.KeyCode.End
-})
 
-local Tabs = {
-    Main = Window:AddTab({ Title = "Main", Icon = "home" }),
-}
+-- DrRayLib
 
-local Options = Fluent.Options
+local DrRayLibrary = loadstring(game:HttpGet("https://raw.githubusercontent.com/AZYsGithub/DrRay-UI-Library/main/DrRay.lua"))()
 
-do
-    local MainTab = Tabs.Main
-    local Toggle = MainTab:AddToggle("Auto Parry", {
-        Title = "Auto Parry",
-        Description = "• Main Parry", -- Perbaiki deskripsi
-        Default = false,
-        Callback = function(state)
-            auto_parry = state
-        end
-    })
+local window = DrRayLibrary:Load("March Hub", "Light") -- Ganti nama jendela menjadi "March Hub"
+local tab = window:AddTab("Main") -- Tambahkan tab baru dengan judul "Main"
 
-    local Toggle1 = MainTab:AddToggle("Visualizer", {
-        Title = "Visualizer",
-        Description = "• View Part", -- Perbaiki deskripsi
-        Default = false,
-        Callback = function(state)
-            visualize_Enabled = state
-        end
-    })
+-- Toggle untuk mengaktifkan Auto Parry
+tab:newToggle("Auto Parry", "• Main Parry", false, function(toggleState)
+    auto_parry = toggleState
+end)
 
-    local Toggle2 = MainTab:AddToggle("Auto Spam", {
-        Title = "Auto Spam",
-        Description = "• Main Spam", -- Perbaiki deskripsi
-        Default = false,
-        Callback = function(state)
-            auto_spam = state
-        end
-    })
+-- Toggle untuk Visualizer
+tab:newToggle("Visualizer", "• View Part", false, function(toggleState)
+    visualize_Enabled = toggleState
+end)
 
-    local Button = MainTab:AddButton("Manual Spam", {
-        Title = "Manual Spam",
-        Description = "• Main Spam", -- Perbaiki deskripsi
-        Callback = function()
-            ManualSpam() -- Panggil fungsi tanpa penugasan
-        end
-    })
-end
+-- Toggle untuk Auto Spam
+tab:newToggle("Auto Spam", "• Main Spam", false, function(toggleState)
+    auto_spam = toggleState
+end)
 
+-- Button untuk Manual Spam
+tab:newButton("Manual Spam", "• Main Spam", function()
+    ManualSpam() -- Panggil fungsi tanpa penugasan
+end)
+
+-- Mengatur tema jendela
+local mainColor = Color3.fromRGB(10, 30, 10) -- Warna utama
+local secondColor = Color3.fromRGB(50, 50, 10) -- Warna sekunder
+
+window:SetTheme(mainColor, secondColor) -- Terapkan tema warna
+
+-- Membuka jendela GUI
+window:Open()
+
+-- Konfigurasi ScreenGui untuk ImageButton
 local ScreenGui = Instance.new("ScreenGui")
 local ImageButton = Instance.new("ImageButton")
 local UICorner = Instance.new("UICorner")
 
--- Konfigurasi ScreenGui
 ScreenGui.Parent = game.CoreGui
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
